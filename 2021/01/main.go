@@ -96,7 +96,7 @@ func getFinalAnswer(txtlines []string) int {
 // main is the entry point for the application.
 func main() {
 	// get the filename from the command line
-  args := os.Args[1:]
+	args := os.Args[1:]
 
 	if len(args) != 1 {
 		log.Fatal("you must supply a filename")
