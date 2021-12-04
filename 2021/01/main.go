@@ -1,36 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
+
+	"github.com/joaocarmo/advent-of-code/helpers"
 )
-
-// readFile reads the file and returns a slice of strings.
-func readFile(filename string) []string {
-	// open the file
-	file, err := os.Open(filename)
-
-	if err != nil {
-		log.Fatalf("failed opening file: %s", err)
-	}
-
-	// make a scanner to read from the file
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	var txtlines []string
-
-	// read each line of the file
-	for scanner.Scan() {
-		txtlines = append(txtlines, scanner.Text())
-	}
-
-	file.Close()
-
-	return txtlines
-}
 
 // comparePrevToCurrent compares the previous result to the current result.
 func comparePrevToCurrent(prev, current int) int {
@@ -159,16 +135,10 @@ func getFinalAnswerPartTwo(txtlines []string) int {
 
 // main is the entry point for the application.
 func main() {
-	// get the filename from the command line
-	args := os.Args[1:]
-
-	if len(args) != 1 {
-		log.Fatal("you must supply a filename")
-	}
-
 	// read the file
+	args := helpers.ReadArguments()
 	filename := args[0]
-	txtlines := readFile(filename)
+	txtlines := helpers.ReadFile(filename)
 
 	// get the final answers
 	answerPartOne := getFinalAnswerPartOne(txtlines)
