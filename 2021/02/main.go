@@ -52,6 +52,19 @@ func getCommandAndDisplacement(line string) (string, int) {
 	return command, displacement
 }
 
+// calculateNewAim calculates the new aim.
+func calculateNewAim(aim int, command string, displacement int) int {
+	if command == "down" {
+		return aim + displacement
+	}
+
+	if command == "up" {
+		return aim - displacement
+	}
+
+	return aim
+}
+
 // calculateNewHorizontalPosition calculates the new horizontal position.
 func calculateNewHorizontalPosition(horizontalPosition int, command string, displacement int) int {
 	if command == "forward" {
@@ -61,8 +74,8 @@ func calculateNewHorizontalPosition(horizontalPosition int, command string, disp
 	return horizontalPosition
 }
 
-// calculateNewDepth calculates the new depth.
-func calculateNewDepth(depth int, command string, displacement int) int {
+// calculateNewDepthPartOne calculates the new depth.
+func calculateNewDepthPartOne(depth int, command string, displacement int) int {
 	if command == "down" {
 		return depth + displacement
 	}
@@ -74,9 +87,18 @@ func calculateNewDepth(depth int, command string, displacement int) int {
 	return depth
 }
 
-// getFinalPositionAndDepth returns the final position and depth of the
+// calculateNewDepthPartTwo calculates the new depth.
+func calculateNewDepthPartTwo(aim int, depth int, command string, displacement int) int {
+	if command == "forward" {
+		return depth + aim*displacement
+	}
+
+	return depth
+}
+
+// getFinalPositionAndDepthPartOne returns the final position and depth of the
 // submarine.
-func getFinalPositionAndDepth(txtlines []string) (int, int) {
+func getFinalPositionAndDepthPartOne(txtlines []string) (int, int) {
 	// set the starting horizontal position and depth
 	horizontalPosition := 0
 	depth := 0
@@ -88,10 +110,35 @@ func getFinalPositionAndDepth(txtlines []string) (int, int) {
 
 		// calculate the new horizontal position and depth
 		horizontalPosition = calculateNewHorizontalPosition(horizontalPosition, command, displacement)
-		depth = calculateNewDepth(depth, command, displacement)
+		depth = calculateNewDepthPartOne(depth, command, displacement)
 
 		// print the current step, horizontal position, and depth
 		fmt.Printf("[step %d]\thorizontal position: %d, depth: %d\n", step+1, horizontalPosition, depth)
+	}
+
+	return horizontalPosition, depth
+}
+
+// getFinalPositionAndDepthPartTwo returns the final position and depth of the
+// submarine.
+func getFinalPositionAndDepthPartTwo(txtlines []string) (int, int) {
+	// set the starting horizontal position and depth
+	aim := 0
+	horizontalPosition := 0
+	depth := 0
+
+	// calculate the final position and depth
+	for step, eachline := range txtlines {
+		// get the command and displacement
+		command, displacement := getCommandAndDisplacement(eachline)
+
+		// calculate the new horizontal position and depth
+		aim = calculateNewAim(aim, command, displacement)
+		horizontalPosition = calculateNewHorizontalPosition(horizontalPosition, command, displacement)
+		depth = calculateNewDepthPartTwo(aim, depth, command, displacement)
+
+		// print the current step, aim, horizontal position, and depth
+		fmt.Printf("[step %d]\taim: %d, horizontal position: %d, depth: %d\n", step+1, aim, horizontalPosition, depth)
 	}
 
 	return horizontalPosition, depth
@@ -109,12 +156,21 @@ func main() {
 	filename := args[0]
 	txtlines := readFile(filename)
 
-	// get the final position and depth
-	finalPosition, finalDepth := getFinalPositionAndDepth(txtlines)
+	// get the final position and depth (Part One)
+	finalPosition, finalDepth := getFinalPositionAndDepthPartOne(txtlines)
 
-	// multiply the final position by the final depth
+	// multiply the final position by the final depth (Part One)
 	finalPositionAndDepth := finalPosition * finalDepth
 
-	// print the final position, depth, and their product
-	fmt.Printf("final position: %d, final depth: %d, final position x depth: %d\n", finalPosition, finalDepth, finalPositionAndDepth)
+	// print the final position, depth, and their product (Part One)
+	fmt.Printf("[Part One] final position: %d, final depth: %d, final position x depth: %d\n", finalPosition, finalDepth, finalPositionAndDepth)
+
+	// get the final position and depth (Part Two)
+	finalPosition, finalDepth = getFinalPositionAndDepthPartTwo(txtlines)
+
+	// multiply the final position by the final depth (Part Two)
+	finalPositionAndDepth = finalPosition * finalDepth
+
+	// print the final position, depth, and their product (Part Two)
+	fmt.Printf("[Part Two] final position: %d, final depth: %d, final position x depth: %d\n", finalPosition, finalDepth, finalPositionAndDepth)
 }
