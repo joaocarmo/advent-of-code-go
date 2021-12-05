@@ -44,6 +44,21 @@ func transposeMatrix(matrix [][]int) [][]int {
 	return transposed
 }
 
+// countBits counts the number of bits in a row.
+func countBits(row []int) (int, int) {
+	var countZero, countOne int
+
+	for i := range row {
+		if row[i] == 0 {
+			countZero++
+		} else {
+			countOne++
+		}
+	}
+
+	return countZero, countOne
+}
+
 // countBitsAndAppendBit counts the number of bits and appends the bit to the output.
 func countBitsAndAppendBit(matrix [][]int, compareFn func(countZero int, countOne int) string) string {
 	// create the output
@@ -51,14 +66,7 @@ func countBitsAndAppendBit(matrix [][]int, compareFn func(countZero int, countOn
 
 	// find the most common bits
 	for i := range matrix {
-		var countZero, countOne int
-		for j := range matrix[i] {
-			if matrix[i][j] == 0 {
-				countZero++
-			} else {
-				countOne++
-			}
-		}
+		countZero, countOne := countBits(matrix[i])
 
 		// append the resulting bit
 		output[i] = compareFn(countZero, countOne)
@@ -74,6 +82,8 @@ func findMostCommonBits(matrix [][]int) string {
 		// append the most common bit
 		if countZero > countOne {
 			return "0"
+		} else if countZero == countOne {
+			return "1"
 		} else {
 			return "1"
 		}
@@ -89,6 +99,8 @@ func findLeastCommonBits(matrix [][]int) string {
 		// append the least common bit
 		if countZero < countOne {
 			return "0"
+		} else if countZero == countOne {
+			return "0"
 		} else {
 			return "1"
 		}
@@ -97,10 +109,68 @@ func findLeastCommonBits(matrix [][]int) string {
 	return countBitsAndAppendBit(matrix, compareFn)
 }
 
-// findGammaAndEpsilon finds the gamma and epsilon rates.
-func findGammaAndEpsilon(txtlines []string) (int, int) {
+// binToArray converts a binary string to an array of ints.
+func binToArray(bin string) []int {
+	// create the array
+	array := make([]int, len(bin))
+
+	// fill the array
+	for i := range bin {
+		array[i], _ = strconv.Atoi(string(bin[i]))
+	}
+
+	return array
+}
+
+// convertArrayToString converts an array of ints to a string.
+func convertArrayToString(array []int) string {
+	// create the string
+	str := make([]string, len(array))
+
+	// fill the string
+	for i := range array {
+		str[i] = strconv.Itoa(array[i])
+	}
+
+	return strings.Join(str, "")
+}
+
+// filterMatrixByArray filters the matrix by the given array.
+func filterMatrixByBin(matrix [][]int, filterBin string) string {
+	// create the output
+	filteredMatrix := matrix
+
+	// convert the bin string to an array of ints
+	filterArr := binToArray(filterBin) // TODO: Needs to recalculate the array
+	//                                    can't use the same bin.
+
+	// filter the matrix
+	for i := range filterArr {
+		var newFilteredMatrix [][]int
+
+		if len(filteredMatrix) == 1 {
+			break
+		}
+
+		for j := range filteredMatrix {
+			if filterArr[i] == filteredMatrix[j][i] {
+				newFilteredMatrix = append(newFilteredMatrix, filteredMatrix[j])
+			}
+		}
+
+		filteredMatrix = newFilteredMatrix
+	}
+
+	return convertArrayToString(filteredMatrix[0])
+}
+
+// findParameters finds the gamma, epsilon, oxygen generator and the CO2
+// scrubber ratings.
+func findParameters(txtlines []string) (int, int, int, int) {
 	var gammaBin, epsilonBin string
 	var gamma, epsilon int64
+	var oxygenGeneratorBin, CO2ScrubberBin string
+	var oxygenGenerator, CO2Scrubber int64
 
 	// convert the input to a matrix of ints
 	matrix := convertToMatrix(txtlines)
@@ -116,7 +186,15 @@ func findGammaAndEpsilon(txtlines []string) (int, int) {
 	epsilonBin = findLeastCommonBits(transposed)
 	epsilon, _ = strconv.ParseInt(epsilonBin, 2, 64)
 
-	return int(gamma), int(epsilon)
+	// find the oxygen generator rating
+	oxygenGeneratorBin = filterMatrixByBin(matrix, gammaBin)
+	oxygenGenerator, _ = strconv.ParseInt(oxygenGeneratorBin, 2, 64)
+
+	// find the CO2 scrubber rating
+	CO2ScrubberBin = filterMatrixByBin(matrix, epsilonBin)
+	CO2Scrubber, _ = strconv.ParseInt(CO2ScrubberBin, 2, 64)
+
+	return int(gamma), int(epsilon), int(oxygenGenerator), int(CO2Scrubber)
 }
 
 // main is the entry point for the application.
@@ -126,14 +204,23 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// find the gamma rate and the epsilon rate
-	gamma, epsilon := findGammaAndEpsilon(txtlines)
+	// find the gamma rate, the epsilon rate, the oxygen generator rating, and
+	// the CO2 scrubber rating
+	gamma, epsilon, oxygenGenerator, CO2Scrubber := findParameters(txtlines)
 
 	// calculate the power consumption
 	power := gamma * epsilon
 
-	// print
+	// print the results
 	fmt.Printf("Gamma: %d\n", gamma)
 	fmt.Printf("Epsilon: %d\n", epsilon)
 	fmt.Printf("Power: %d\n", power)
+
+	// calculate the life support rating
+	lifeSupport := oxygenGenerator * CO2Scrubber
+
+	// print the results
+	fmt.Printf("Oxygen Generator: %d\n", oxygenGenerator)
+	fmt.Printf("CO2 Scrubber: %d\n", CO2Scrubber)
+	fmt.Printf("Life Support: %d\n", lifeSupport)
 }
