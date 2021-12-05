@@ -8,35 +8,6 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-type BingoCard struct {
-	sequence        []int
-	winningSequence []int
-	card            [][]int
-}
-
-func (b BingoCard) new(sequence []int, card [][]int) BingoCard {
-	b.sequence = sequence
-	b.card = card
-
-	return b
-}
-
-func (b BingoCard) findWinningSequence() {
-	if len(b.winningSequence) > 0 {
-		return
-	}
-
-	// TODO: Need to add the core algorithm here.
-}
-
-func (b BingoCard) isWinner() bool {
-	if len(b.winningSequence) == 0 {
-		b.findWinningSequence()
-	}
-
-	return len(b.winningSequence) > 0
-}
-
 // stringToIntArray converts a string to an array of ints.
 func stringToIntArray(str string, separator string) []int {
 	var result []int
@@ -113,7 +84,9 @@ func findWinningCard(bingo []int, cards [][][]int) BingoCard {
 	var winningCards []BingoCard
 
 	for _, card := range cards {
-		b := BingoCard{}.new(bingo, card)
+		b := BingoCard{}
+
+		b.new(bingo, card)
 
 		if b.isWinner() {
 			winningCards = append(winningCards, b)
@@ -137,8 +110,22 @@ func main() {
 	winningBingoCard := findWinningCard(bingo, cards)
 
 	// print the winning card
-	for _, row := range winningBingoCard.card {
-		fmt.Println(row)
+	fmt.Println("winning card:\n")
+	for _, row := range winningBingoCard.getCard() {
+		for _, num := range row {
+			fmt.Printf("%2d ", num)
+		}
+		fmt.Println()
 	}
-	println()
+	fmt.Println()
+
+	// print the winning sequence
+	fmt.Printf("winning sequence: ")
+	for _, num := range winningBingoCard.getWinningSequence() {
+		fmt.Printf("%2d ", num)
+	}
+	fmt.Println("\n")
+
+	// print the final score
+	fmt.Printf("final score: %d\n", winningBingoCard.getScore())
 }
