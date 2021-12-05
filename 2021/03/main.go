@@ -75,6 +75,22 @@ func countBitsAndAppendBit(matrix [][]int, compareFn func(countZero int, countOn
 	return strings.Join(output, "")
 }
 
+// countBitsAndAppendBit counts the number of bits and appends the bit to the output.
+func countBitsAndKeepBit(matrix [][]int, compareFn func(countZero int, countOne int) int) []int {
+	// create the output
+	output := make([]int, len(matrix))
+
+	// find the most common bits
+	for i := range matrix {
+		countZero, countOne := countBits(matrix[i])
+
+		// append the resulting bit
+		output[i] = compareFn(countZero, countOne)
+	}
+
+	return output
+}
+
 // findMostCommonBits finds the most common bits.
 func findMostCommonBits(matrix [][]int) string {
 	// define the compare function
@@ -82,8 +98,6 @@ func findMostCommonBits(matrix [][]int) string {
 		// append the most common bit
 		if countZero > countOne {
 			return "0"
-		} else if countZero == countOne {
-			return "1"
 		} else {
 			return "1"
 		}
@@ -99,8 +113,6 @@ func findLeastCommonBits(matrix [][]int) string {
 		// append the least common bit
 		if countZero < countOne {
 			return "0"
-		} else if countZero == countOne {
-			return "0"
 		} else {
 			return "1"
 		}
@@ -109,17 +121,30 @@ func findLeastCommonBits(matrix [][]int) string {
 	return countBitsAndAppendBit(matrix, compareFn)
 }
 
-// binToArray converts a binary string to an array of ints.
-func binToArray(bin string) []int {
-	// create the array
-	array := make([]int, len(bin))
-
-	// fill the array
-	for i := range bin {
-		array[i], _ = strconv.Atoi(string(bin[i]))
+// filterByMostCommonBits filters the matrix by the most common bits.
+func filterByMostCommonBits(matrix [][]int) []int {
+	compareFn := func(countZero int, countOne int) int {
+		if countZero <= countOne {
+			return 1
+		} else {
+			return 0
+		}
 	}
 
-	return array
+	return countBitsAndKeepBit(matrix, compareFn)
+}
+
+// filterByLeastCommonBits filters the matrix by the least common bits.
+func filterByLeastCommonBits(matrix [][]int) []int {
+	compareFn := func(countZero int, countOne int) int {
+		if countZero > countOne {
+			return 1
+		} else {
+			return 0
+		}
+	}
+
+	return countBitsAndKeepBit(matrix, compareFn)
 }
 
 // convertArrayToString converts an array of ints to a string.
@@ -136,19 +161,19 @@ func convertArrayToString(array []int) string {
 }
 
 // filterMatrixByArray filters the matrix by the given array.
-func filterMatrixByBin(matrix [][]int, filterBin string) string {
+func filterMatrixByBin(matrix [][]int, filterFn func(matrix [][]int) []int) string {
 	// create the output
 	filteredMatrix := matrix
 
-	// convert the bin string to an array of ints
-	filterArr := binToArray(filterBin) // TODO: Needs to recalculate the array
-	//                                    can't use the same bin.
+	// get the filter array
+	filterArr := filterFn(transposeMatrix(filteredMatrix))
 
 	// filter the matrix
 	for i := range filterArr {
 		var newFilteredMatrix [][]int
 
 		if len(filteredMatrix) == 1 {
+			// if there's only one value in the matrix, just return it
 			break
 		}
 
@@ -158,7 +183,11 @@ func filterMatrixByBin(matrix [][]int, filterBin string) string {
 			}
 		}
 
+		// update the filtered matrix
 		filteredMatrix = newFilteredMatrix
+
+		// calculate the new filter array
+		filterArr = filterFn(transposeMatrix(filteredMatrix))
 	}
 
 	return convertArrayToString(filteredMatrix[0])
@@ -187,11 +216,11 @@ func findParameters(txtlines []string) (int, int, int, int) {
 	epsilon, _ = strconv.ParseInt(epsilonBin, 2, 64)
 
 	// find the oxygen generator rating
-	oxygenGeneratorBin = filterMatrixByBin(matrix, gammaBin)
+	oxygenGeneratorBin = filterMatrixByBin(matrix, filterByMostCommonBits)
 	oxygenGenerator, _ = strconv.ParseInt(oxygenGeneratorBin, 2, 64)
 
 	// find the CO2 scrubber rating
-	CO2ScrubberBin = filterMatrixByBin(matrix, epsilonBin)
+	CO2ScrubberBin = filterMatrixByBin(matrix, filterByLeastCommonBits)
 	CO2Scrubber, _ = strconv.ParseInt(CO2ScrubberBin, 2, 64)
 
 	return int(gamma), int(epsilon), int(oxygenGenerator), int(CO2Scrubber)
