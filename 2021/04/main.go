@@ -8,6 +8,35 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+type BingoCard struct {
+	sequence        []int
+	winningSequence []int
+	card            [][]int
+}
+
+func (b BingoCard) new(sequence []int, card [][]int) BingoCard {
+	b.sequence = sequence
+	b.card = card
+
+	return b
+}
+
+func (b BingoCard) findWinningSequence() {
+	if len(b.winningSequence) > 0 {
+		return
+	}
+
+	// TODO: Need to add the core algorithm here.
+}
+
+func (b BingoCard) isWinner() bool {
+	if len(b.winningSequence) == 0 {
+		b.findWinningSequence()
+	}
+
+	return len(b.winningSequence) > 0
+}
+
 // stringToIntArray converts a string to an array of ints.
 func stringToIntArray(str string, separator string) []int {
 	var result []int
@@ -65,6 +94,35 @@ func bingoParse(txtlines []string) ([]int, [][][]int) {
 	return sequence, cards
 }
 
+// findSmallestWinningSequence finds the winning card with the smallest winning
+// sequence.
+func findSmallestWinningSequence(winningCards []BingoCard) BingoCard {
+	var winningCard BingoCard
+
+	for _, card := range winningCards {
+		if len(winningCard.winningSequence) == 0 || len(card.winningSequence) < len(winningCard.winningSequence) {
+			winningCard = card
+		}
+	}
+
+	return winningCard
+}
+
+// findWinningCard finds the winning card.
+func findWinningCard(bingo []int, cards [][][]int) BingoCard {
+	var winningCards []BingoCard
+
+	for _, card := range cards {
+		b := BingoCard{}.new(bingo, card)
+
+		if b.isWinner() {
+			winningCards = append(winningCards, b)
+		}
+	}
+
+	return findSmallestWinningSequence(winningCards)
+}
+
 // main is the entry point for the application.
 func main() {
 	// read the file
@@ -75,13 +133,12 @@ func main() {
 	// parses the file for the random sequence and the bingo cards
 	bingo, cards := bingoParse(txtlines)
 
-	// print the text lines
-	fmt.Println(bingo)
-	println()
-	for _, card := range cards {
-		for _, row := range card {
-			fmt.Println(row)
-		}
-		println()
+	// find the winning card
+	winningBingoCard := findWinningCard(bingo, cards)
+
+	// print the winning card
+	for _, row := range winningBingoCard.card {
+		fmt.Println(row)
 	}
+	println()
 }
