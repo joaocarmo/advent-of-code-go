@@ -8,7 +8,7 @@ of skill sets and skill levels.
 The solutions can be obtained by running the following command:
 
 ```sh
-go run main.go input.txt
+go run . input.txt
 ```
 
 ## Create a new puzzle
