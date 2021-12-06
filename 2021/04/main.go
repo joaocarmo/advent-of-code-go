@@ -79,8 +79,23 @@ func findSmallestWinningSequence(winningCards []BingoCard) BingoCard {
 	return winningCard
 }
 
-// findWinningCard finds the winning card.
-func findWinningCard(bingo []int, cards [][][]int) BingoCard {
+// findLongestWinningSequence finds the winning card with the longest winning
+// sequence.
+func findLongestWinningSequence(winningCards []BingoCard) BingoCard {
+	var losingCard BingoCard
+
+	for _, card := range winningCards {
+		if len(losingCard.winningSequence) == 0 || len(card.winningSequence) > len(losingCard.winningSequence) {
+			losingCard = card
+		}
+	}
+
+	return losingCard
+}
+
+// findWinningCard finds the winning cards with the smallest and longest winning
+// sequences.
+func findWinningCard(bingo []int, cards [][][]int) (BingoCard, BingoCard) {
 	var winningCards []BingoCard
 
 	for _, card := range cards {
@@ -93,7 +108,7 @@ func findWinningCard(bingo []int, cards [][][]int) BingoCard {
 		}
 	}
 
-	return findSmallestWinningSequence(winningCards)
+	return findSmallestWinningSequence(winningCards), findLongestWinningSequence(winningCards)
 }
 
 // main is the entry point for the application.
@@ -106,8 +121,8 @@ func main() {
 	// parses the file for the random sequence and the bingo cards
 	bingo, cards := bingoParse(txtlines)
 
-	// find the winning card
-	winningBingoCard := findWinningCard(bingo, cards)
+	// find the winning and losing cards
+	winningBingoCard, losingBingoCard := findWinningCard(bingo, cards)
 
 	// print the winning card
 	fmt.Println("winning card:\n")
@@ -126,6 +141,26 @@ func main() {
 	}
 	fmt.Println("\n")
 
-	// print the final score
-	fmt.Printf("final score: %d\n", winningBingoCard.getScore())
+	// print the final winning score
+	fmt.Printf("final winning score: %d\n", winningBingoCard.getScore())
+
+	// print the losing card
+	fmt.Println("losing card:\n")
+	for _, row := range losingBingoCard.getCard() {
+		for _, num := range row {
+			fmt.Printf("%2d ", num)
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+
+	// print the losing sequence
+	fmt.Printf("losing sequence: ")
+	for _, num := range losingBingoCard.getWinningSequence() {
+		fmt.Printf("%2d ", num)
+	}
+	fmt.Println("\n")
+
+	// print the final losing score
+	fmt.Printf("final losing score: %d\n", losingBingoCard.getScore())
 }
