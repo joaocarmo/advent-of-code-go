@@ -7,6 +7,17 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+func absInt(x int) int {
+	return absDiffInt(x, 0)
+}
+
+func absDiffInt(x, y int) int {
+	if x < y {
+		return y - x
+	}
+	return x - y
+}
+
 // minOf returns the minimum of the given values.
 func minOf(vars ...int) int {
 	min := vars[0]

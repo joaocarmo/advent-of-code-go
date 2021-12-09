@@ -99,19 +99,47 @@ func (b *Board) addVentPoint(point VentPoint) {
 func (b *Board) addVentPoints(vent Vent) {
 	if vent.start.x == vent.end.x {
 		// add the vertical points
-		start := minOf(vent.start.y, vent.end.y)
-		end := maxOf(vent.start.y, vent.end.y)
-		for i := start; i <= end; i++ {
-			b.addVentPoint(VentPoint{vent.start.x, i, vent.start.count})
+		startX := minOf(vent.start.y, vent.end.y)
+		endX := maxOf(vent.start.y, vent.end.y)
+		for x := startX; x <= endX; x++ {
+			b.addVentPoint(VentPoint{vent.start.x, x, vent.start.count})
 		}
 	}
 
 	if vent.start.y == vent.end.y {
 		// add the horizontal points
-		start := minOf(vent.start.x, vent.end.x)
-		end := maxOf(vent.start.x, vent.end.x)
-		for i := start; i <= end; i++ {
-			b.addVentPoint(VentPoint{i, vent.start.y, vent.start.count})
+		startY := minOf(vent.start.x, vent.end.x)
+		endY := maxOf(vent.start.x, vent.end.x)
+		for y := startY; y <= endY; y++ {
+			b.addVentPoint(VentPoint{y, vent.start.y, vent.start.count})
+		}
+	}
+
+	// add the diagonal points
+	startX := vent.start.x
+	endX := vent.end.x
+	startY := vent.start.y
+	endY := vent.end.y
+
+	// check if the slope is 1
+	var slope int
+
+	if endX-startX != 0 {
+		slope = (endY - startY) / (endX - startX)
+	}
+
+	if absInt(slope) == 1 {
+		// add the diagonal points
+		if startX < endX {
+			for x := startX; x <= endX; x++ {
+				y := startY + slope*(x-startX)
+				b.addVentPoint(VentPoint{x, y, vent.start.count})
+			}
+		} else {
+			for x := startX; x >= endX; x-- {
+				y := startY + slope*(x-startX)
+				b.addVentPoint(VentPoint{x, y, vent.start.count})
+			}
 		}
 	}
 }
