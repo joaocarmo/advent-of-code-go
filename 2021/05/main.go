@@ -7,15 +7,17 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-func absInt(x int) int {
-	return absDiffInt(x, 0)
-}
-
+// absDiffInt returns the absolute difference between two integers.
 func absDiffInt(x, y int) int {
 	if x < y {
 		return y - x
 	}
 	return x - y
+}
+
+// absInt returns the absolute value of the given integer.
+func absInt(x int) int {
+	return absDiffInt(x, 0)
 }
 
 // minOf returns the minimum of the given values.
