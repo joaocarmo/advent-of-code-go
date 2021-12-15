@@ -8,6 +8,8 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+const dayThreshold = 100
+
 // getInitialState returns the initial state of the fish
 func getInitialState(txtlines []string) []int {
 	var initialState []int
@@ -50,8 +52,8 @@ func getFishState(fish []*LanternFish) []int {
 	return fishState
 }
 
-// getFishAfterDays returns the fish after a set number of days
-func getFishAfterDays(initialFish []*LanternFish, daysToCount int) []*LanternFish {
+// getFishAfterDays returns the fish after a set number of days (version 1)
+func getFishAfterDaysV1(initialFish []*LanternFish, daysToCount int) []*LanternFish {
 	fishAfterDays := initialFish
 
 	for day := 1; day <= daysToCount; day++ {
@@ -73,7 +75,7 @@ func getFishAfterDays(initialFish []*LanternFish, daysToCount int) []*LanternFis
 		if day == 1 {
 			dayWord = "day"
 		}
-		if day < 20 && len(fishAfterDays) < 30 {
+		if day < dayThreshold && len(fishAfterDays) < 30 {
 			currentState = helpers.IntArrayToString(getFishState(fishAfterDays), ",")
 		} else {
 			currentState = "..."
@@ -83,6 +85,22 @@ func getFishAfterDays(initialFish []*LanternFish, daysToCount int) []*LanternFis
 	}
 
 	return fishAfterDays
+}
+
+// getFishAfterDays returns the fish after a set number of days (version 2)
+func getFishAfterDaysV2(initialFish []*LanternFish, daysToCount int) int {
+	fishAfterDays := len(initialFish)
+
+	return fishAfterDays
+}
+
+// getFishAfterDays returns the fish after a set number of days
+func getFishAfterDays(initialFish []*LanternFish, daysToCount int) int {
+	if daysToCount < dayThreshold {
+		return len(getFishAfterDaysV1(initialFish, daysToCount))
+	}
+
+	return getFishAfterDaysV2(initialFish, daysToCount)
 }
 
 // main is the entry point for the application.
@@ -102,9 +120,9 @@ func main() {
 	initialFish := getInitialFish(initialState)
 
 	// get the fish after a set number of days
-	daysToCount := 256
+	daysToCount := 80
 	fishAfterDays := getFishAfterDays(initialFish, daysToCount)
 
 	// print the text lines
-	fmt.Printf("\nFinal number of fish: %d\n", len(fishAfterDays))
+	fmt.Printf("\nFinal number of fish: %d\n", fishAfterDays)
 }

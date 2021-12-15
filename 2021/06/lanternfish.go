@@ -1,7 +1,10 @@
 package main
 
+const daysToNewFish = 7
+
 type LanternFish struct {
-	daysLeft int
+	daysLeft    int
+	totalResets int
 }
 
 func (lf *LanternFish) new(initialDays int) *LanternFish {
@@ -11,6 +14,8 @@ func (lf *LanternFish) new(initialDays int) *LanternFish {
 		lf.daysLeft = 8
 	}
 
+	lf.totalResets = 0
+
 	return lf
 }
 
@@ -18,12 +23,18 @@ func (lf *LanternFish) getDaysLeft() int {
 	return lf.daysLeft
 }
 
+func (lf *LanternFish) getTotalResets() int {
+	return lf.totalResets
+}
+
 func (lf *LanternFish) resetDays() {
-	lf.daysLeft = 6
+	lf.daysLeft = daysToNewFish - 1
+	lf.totalResets++
 }
 
 func (lf *LanternFish) advanceDays(days int) {
-	lf.daysLeft -= days
+	lf.daysLeft -= days % daysToNewFish
+	lf.totalResets += days / daysToNewFish
 }
 
 func (lf *LanternFish) nextDay() {
