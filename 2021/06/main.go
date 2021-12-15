@@ -67,16 +67,19 @@ func getFishAfterDays(initialFish []*LanternFish, daysToCount int) []*LanternFis
 		}
 
 		// print the number of fish after the current day
-		if day < 20 && len(fishAfterDays) < 30 {
-			dayWord := "days"
+		dayWord := "days"
+		var currentState string
 
-			if day == 1 {
-				dayWord = "day"
-			}
-
-			currentState := getFishState(fishAfterDays)
-			fmt.Printf("After %2d %s:\t%s\n", day, dayWord, helpers.IntArrayToString(currentState, ","))
+		if day == 1 {
+			dayWord = "day"
 		}
+		if day < 20 && len(fishAfterDays) < 30 {
+			currentState = helpers.IntArrayToString(getFishState(fishAfterDays), ",")
+		} else {
+			currentState = "..."
+		}
+
+		fmt.Printf("After %2d %s:\t%s\n", day, dayWord, currentState)
 	}
 
 	return fishAfterDays
@@ -99,7 +102,7 @@ func main() {
 	initialFish := getInitialFish(initialState)
 
 	// get the fish after a set number of days
-	daysToCount := 80
+	daysToCount := 256
 	fishAfterDays := getFishAfterDays(initialFish, daysToCount)
 
 	// print the text lines
