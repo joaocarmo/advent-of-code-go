@@ -2,27 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
-
-// stringToIntArray converts a string to an array of ints.
-func stringToIntArray(str string, separator string) []int {
-	var result []int
-
-	for _, numStr := range strings.Split(str, separator) {
-		cleanNumStr := strings.TrimSpace(numStr)
-
-		if cleanNumStr != "" {
-			num, _ := strconv.Atoi(cleanNumStr)
-			result = append(result, num)
-		}
-	}
-
-	return result
-}
 
 // cardIsEmpty checks if a card is empty.
 func cardIsEmpty(card [][]int) bool {
@@ -46,7 +28,7 @@ func bingoParse(txtlines []string) ([]int, [][][]int) {
 
 	for i, line := range txtlines {
 		if i == 0 {
-			sequence = stringToIntArray(line, ",")
+			sequence = helpers.StringToIntArray(line, ",")
 			continue
 		}
 
@@ -58,7 +40,7 @@ func bingoParse(txtlines []string) ([]int, [][][]int) {
 			continue
 		}
 
-		cardRow := stringToIntArray(line, " ")
+		cardRow := helpers.StringToIntArray(line, " ")
 		card = append(card, cardRow)
 	}
 
