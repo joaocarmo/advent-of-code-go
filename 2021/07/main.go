@@ -7,6 +7,7 @@ import (
 )
 
 const verbose = true
+const useVersion = 2
 
 // getCrabPositions parses the text lines to get the crab positions.
 func getCrabPositions(txtlines []string) []*Crab {
@@ -49,7 +50,11 @@ func getDistance(crabs []*Crab, positionX int) int {
 	var distance int
 
 	for _, crab := range crabs {
-		distance += crab.getDistanceTo(positionX, 0, 0)
+		if useVersion == 2 {
+			distance += crab.getWeightedDistanceTo(positionX, 0, 0)
+		} else {
+			distance += crab.getDistanceTo(positionX, 0, 0)
+		}
 	}
 
 	return distance
@@ -64,6 +69,7 @@ func getOptimalPositionAndFuel(crabs []*Crab) (int, int) {
 	lowLimit, highLimit := getLowerHigherLimit(crabs)
 
 	for {
+		// use a ternary search algorithm to find the optimal position
 		thirds := (highLimit - lowLimit) / 3
 		mid1 := lowLimit + thirds
 		mid2 := highLimit - thirds
