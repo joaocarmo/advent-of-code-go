@@ -30,7 +30,7 @@ func (crab *Crab) getZ() int {
 
 func (crab *Crab) getDistanceTo(positionX int, positionY int, positionZ int) int {
 	point1 := &helpers.Point{}
-	point1.New(crab.positionX, crab.positionY, crab.positionZ)
+	point1.New(crab.getX(), crab.getY(), crab.getZ())
 
 	point2 := &helpers.Point{}
 	point2.New(positionX, positionY, positionZ)
