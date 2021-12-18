@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
 type VentPoint struct {
@@ -99,8 +101,8 @@ func (b *Board) addVentPoint(point VentPoint) {
 func (b *Board) addVentPoints(vent Vent) {
 	if vent.start.x == vent.end.x {
 		// add the vertical points
-		startX := minOf(vent.start.y, vent.end.y)
-		endX := maxOf(vent.start.y, vent.end.y)
+		startX := helpers.MinOf(vent.start.y, vent.end.y)
+		endX := helpers.MaxOf(vent.start.y, vent.end.y)
 		for x := startX; x <= endX; x++ {
 			b.addVentPoint(VentPoint{vent.start.x, x, vent.start.count})
 		}
@@ -108,8 +110,8 @@ func (b *Board) addVentPoints(vent Vent) {
 
 	if vent.start.y == vent.end.y {
 		// add the horizontal points
-		startY := minOf(vent.start.x, vent.end.x)
-		endY := maxOf(vent.start.x, vent.end.x)
+		startY := helpers.MinOf(vent.start.x, vent.end.x)
+		endY := helpers.MaxOf(vent.start.x, vent.end.x)
 		for y := startY; y <= endY; y++ {
 			b.addVentPoint(VentPoint{y, vent.start.y, vent.start.count})
 		}
@@ -128,7 +130,7 @@ func (b *Board) addVentPoints(vent Vent) {
 		slope = (endY - startY) / (endX - startX)
 	}
 
-	if absInt(slope) == 1 {
+	if helpers.AbsInt(slope) == 1 {
 		// add the diagonal points
 		if startX < endX {
 			for x := startX; x <= endX; x++ {

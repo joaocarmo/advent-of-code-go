@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
@@ -13,25 +12,6 @@ const useVersion = 2
 const verbose = false
 const dayThreshold = 20
 const daysToCount = 256
-
-// getInitialState returns the initial state of the fish
-func getInitialState(txtlines []string) []int {
-	var initialState []int
-
-	for _, line := range txtlines {
-		// convert the line to an int array
-		if line != "" {
-			states := strings.Split(line, ",")
-
-			for _, state := range states {
-				stateInt, _ := strconv.Atoi(state)
-				initialState = append(initialState, stateInt)
-			}
-		}
-	}
-
-	return initialState
-}
 
 // getInitialFish returns the initial fish
 func getInitialFish(initialState []int) []*LanternFish {
@@ -170,7 +150,7 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// get the initial state
-	initialState := getInitialState(txtlines)
+	initialState := helpers.GetInitialState(txtlines)
 
 	// print the initial state
 	fmt.Printf("Initial state:\t%s\n", helpers.IntArrayToString(initialState, ","))
