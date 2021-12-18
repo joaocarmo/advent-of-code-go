@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const dayThreshold = 100
+const useVersion = 2
+const verbose = false
+const dayThreshold = 20
+const daysToCount = 256
 
 // getInitialState returns the initial state of the fish
 func getInitialState(txtlines []string) []int {
@@ -52,6 +56,27 @@ func getFishState(fish []*LanternFish) []int {
 	return fishState
 }
 
+// printStatus prints the current status of the fish
+func printStatus(day int, fish []*LanternFish) {
+	if !verbose {
+		return
+	}
+
+	dayWord := "days"
+	var currentState string
+
+	if day == 1 {
+		dayWord = "day"
+	}
+	if useVersion == 1 && day < dayThreshold && len(fish) < 30 {
+		currentState = helpers.IntArrayToString(getFishState(fish), ",")
+	} else {
+		currentState = "..."
+	}
+
+	fmt.Printf("After %2d %s:\t%s\n", day, dayWord, currentState)
+}
+
 // getFishAfterDays returns the fish after a set number of days (version 1)
 func getFishAfterDaysV1(initialFish []*LanternFish, daysToCount int) []*LanternFish {
 	fishAfterDays := initialFish
@@ -69,34 +94,68 @@ func getFishAfterDaysV1(initialFish []*LanternFish, daysToCount int) []*LanternF
 		}
 
 		// print the number of fish after the current day
-		dayWord := "days"
-		var currentState string
-
-		if day == 1 {
-			dayWord = "day"
-		}
-		if day < dayThreshold && len(fishAfterDays) < 30 {
-			currentState = helpers.IntArrayToString(getFishState(fishAfterDays), ",")
-		} else {
-			currentState = "..."
-		}
-
-		fmt.Printf("After %2d %s:\t%s\n", day, dayWord, currentState)
+		printStatus(day, fishAfterDays)
 	}
 
 	return fishAfterDays
 }
 
+// memoizedGetFishAfterDays returns the fish after a set number of days
+func memoizedGetFishAfterNDays(cache map[string]int) func(lf *LanternFish, daysToCount int) int {
+	return func(lf *LanternFish, daysToCount int) int {
+		getFishAfterNDays := memoizedGetFishAfterNDays(cache)
+		daysLeftKey := strconv.Itoa(lf.getDaysLeft())
+		daysToCountKey := strconv.Itoa(daysToCount)
+		cacheKey := daysLeftKey + "-" + daysToCountKey
+
+		if cached, ok := cache[cacheKey]; ok {
+			if verbose {
+				fmt.Printf("Cache hit: %s\n", cacheKey)
+			}
+
+			return cached
+		}
+
+		fishAfterDays := 1
+
+		// loop through the day
+		for day := 1; day <= daysToCount; day++ {
+			// get the next day fish
+			nextDayFish := lf.getNextDayFish()
+
+			// if the next day fish is not nil, append it to the list
+			if nextDayFish != nil {
+				fishAfterDays += getFishAfterNDays(nextDayFish, daysToCount-day)
+			}
+		}
+
+		cache[cacheKey] = fishAfterDays
+
+		if verbose {
+			fmt.Printf("Cache miss: %s\n", cacheKey)
+		}
+
+		return cache[cacheKey]
+	}
+}
+
 // getFishAfterDays returns the fish after a set number of days (version 2)
 func getFishAfterDaysV2(initialFish []*LanternFish, daysToCount int) int {
-	fishAfterDays := len(initialFish)
+	fishAfterDays := 0
+
+	var cache = make(map[string]int)
+	getFishAfterNDays := memoizedGetFishAfterNDays(cache)
+
+	for _, fishDaysLeft := range initialFish {
+		fishAfterDays += getFishAfterNDays(fishDaysLeft, daysToCount)
+	}
 
 	return fishAfterDays
 }
 
 // getFishAfterDays returns the fish after a set number of days
 func getFishAfterDays(initialFish []*LanternFish, daysToCount int) int {
-	if daysToCount < dayThreshold {
+	if useVersion == 1 {
 		return len(getFishAfterDaysV1(initialFish, daysToCount))
 	}
 
@@ -120,9 +179,13 @@ func main() {
 	initialFish := getInitialFish(initialState)
 
 	// get the fish after a set number of days
-	daysToCount := 80
+	start := time.Now()
 	fishAfterDays := getFishAfterDays(initialFish, daysToCount)
+	elapsed := time.Since(start)
 
 	// print the text lines
 	fmt.Printf("\nFinal number of fish: %d\n", fishAfterDays)
+
+	// print the elapsed time
+	fmt.Printf("\nElapsed time (v%d): %s\n", useVersion, elapsed)
 }
