@@ -11,14 +11,14 @@ const verbose = true
 
 var numOfSignalsToDigit = map[int]int{
 	0: 6,
-	1: 2,
+	1: 2, // unique
 	2: 5,
 	3: 5,
-	4: 4,
+	4: 4, // unique
 	5: 5,
 	6: 6,
-	7: 3,
-	8: 7,
+	7: 3, // unique
+	8: 7, // unique
 	9: 6,
 }
 
@@ -90,7 +90,7 @@ func inferDigitsFromNumOfSignals(signal string) []int {
 }
 
 // getPossibleOutputDigits returns the possible output digits.
-func getPossibleOutputDigits(output [][]string) map[int]map[string][]int {
+func getPossibleOutputDigits(output [][]string, collapse bool) map[int]map[string][]int {
 	// create a map of the possible digits
 	var possibleDigits = make(map[int]map[string][]int, len(output))
 
@@ -103,10 +103,16 @@ func getPossibleOutputDigits(output [][]string) map[int]map[string][]int {
 				possibleDigits[i] = make(map[string][]int)
 			}
 
+			var newKey string
 			counter := 0
 
 			for {
-				newKey := fmt.Sprintf("%s_%d", digit, counter)
+
+				if collapse {
+					newKey = digit
+				} else {
+					newKey = fmt.Sprintf("%s_%d", digit, counter)
+				}
 
 				// if the digit is not in the map
 				if _, ok := possibleDigits[i][newKey]; !ok {
@@ -170,6 +176,44 @@ func countLenPerLine(output map[int]map[string][]int) int {
 	return numOfUniqueSignals
 }
 
+// getSignalsContaining returns the signals containing a given possible number.
+func getSignalsContaining(lineDigits map[string][]int, number int) []string {
+	var signalsContaining []string
+
+	// loop through the digits
+	for signal, digits := range lineDigits {
+		if helpers.IntArrayContains(digits, number) {
+			signalsContaining = append(signalsContaining, signal)
+		}
+	}
+
+	return signalsContaining
+}
+
+// getSevenSegmentDisplaysFromSignals gets the 7-segment display decoded from the
+// signals.
+func getSevenSegmentDisplaysFromSignals(signals [][]string) []*SevenSegmentDisplay {
+	var ssdArr []*SevenSegmentDisplay
+	singalsContaining := make(map[int][]string, 10)
+
+	possibleOutputDigits := getPossibleOutputDigits(signals, true)
+	printOutputMap(possibleOutputDigits)
+
+	// loop through the lines
+	for _, lineDigits := range possibleOutputDigits {
+		for i := 0; i < 10; i++ {
+			singalsContaining[i] = getSignalsContaining(lineDigits, i)
+			fmt.Println(i, singalsContaining[i])
+		}
+
+		ssd := &SevenSegmentDisplay{}
+		ssd.inferFromSingals(singalsContaining)
+		ssdArr = append(ssdArr, ssd)
+	}
+
+	return ssdArr
+}
+
 // main is the entry point for the application.
 func main() {
 	// read the file
@@ -178,19 +222,27 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// parse the file into signal patterns and output values
-	_, output := parseInput(txtlines)
+	signals, output := parseInput(txtlines)
 
 	// infer the digits from the number of signals for the output
-	possibleOutputDigits := getPossibleOutputDigits(output)
+	possibleOutputDigits := getPossibleOutputDigits(output, false)
 
 	// print information
 	printOutputMap(possibleOutputDigits)
-	fmt.Println("Number of unique signals:", countLenPerLine(possibleOutputDigits))
+	fmt.Printf("Number of unique signals: %d\n\n", countLenPerLine(possibleOutputDigits))
 
 	// get the number of single digits for a given signal
 	numOfSingleDigits := getSingleDigits(possibleOutputDigits)
 
 	// print information
 	printOutputMap(numOfSingleDigits)
-	fmt.Println("Number of unique signals with single possible digits:", countLenPerLine(numOfSingleDigits))
+	fmt.Printf("Number of unique signals with single possible digits: %d\n\n", countLenPerLine(numOfSingleDigits))
+
+	// get the 7-segment display from the singnals
+	ssdArr := getSevenSegmentDisplaysFromSignals(signals)
+
+	// print the 7-segment display
+	for line, ssd := range ssdArr {
+		fmt.Printf("Line %d, 7-segment display: %v\n", line, ssd)
+	}
 }
