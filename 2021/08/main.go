@@ -206,15 +206,16 @@ func getSignalsContaining(lineDigits map[string][]int, number int) []string {
 // getSevenSegmentDisplaysFromSignals gets the 7-segment display decoded from the
 // signals.
 func getSevenSegmentDisplaysFromSignals(signals [][]string) []*SevenSegmentDisplay {
-	var ssdArr []*SevenSegmentDisplay
-	singalsContaining := make(map[int][]string, 10)
+	ssdArr := make([]*SevenSegmentDisplay, len(signals))
 
 	possibleOutputDigits := getPossibleOutputDigits(signals, true)
 	printOutputMap(possibleOutputDigits)
 
 	// loop through the lines
-	for _, lineDigits := range possibleOutputDigits {
-		for i := 0; i < 10; i++ {
+	for line, lineDigits := range possibleOutputDigits {
+		singalsContaining := make(map[int][]string, len(lineDigits))
+
+		for i := 0; i < len(lineDigits); i++ {
 			singalsContaining[i] = getSignalsContaining(lineDigits, i)
 
 			if verbose {
@@ -224,7 +225,7 @@ func getSevenSegmentDisplaysFromSignals(signals [][]string) []*SevenSegmentDispl
 
 		ssd := &SevenSegmentDisplay{}
 		ssd.inferFromSingals(singalsContaining)
-		ssdArr = append(ssdArr, ssd)
+		ssdArr[line] = ssd
 	}
 
 	return ssdArr
@@ -300,6 +301,12 @@ func main() {
 
 	// get the decoded output from the 7-segment displays
 	decodedOutput := getDecodedOutput(output, ssdArr)
+
+	if verbose {
+		for i, signal := range signals {
+			fmt.Printf("%v | %v | %v\n\n", signal, output[i], ssdArr[i])
+		}
+	}
 
 	decodedNumbers := decodedOutputToNumbers(decodedOutput)
 
