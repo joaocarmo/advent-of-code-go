@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const verbose = true
+const verbose = false
 
 var numOfSignalsToDigit = map[int]int{
 	0: 6,
@@ -20,6 +21,18 @@ var numOfSignalsToDigit = map[int]int{
 	7: 3, // unique
 	8: 7, // unique
 	9: 6,
+}
+
+// getNumOfOccurrences returns the number of occurrences of a signal in an array
+// of signals.
+func getNumOfOccurrences(signal string, signals []string) int {
+	count := 0
+
+	for _, s := range signals {
+		count += strings.Count(s, signal)
+	}
+
+	return count
 }
 
 // printOutputMap prints the output map.
@@ -203,7 +216,10 @@ func getSevenSegmentDisplaysFromSignals(signals [][]string) []*SevenSegmentDispl
 	for _, lineDigits := range possibleOutputDigits {
 		for i := 0; i < 10; i++ {
 			singalsContaining[i] = getSignalsContaining(lineDigits, i)
-			fmt.Println(i, singalsContaining[i])
+
+			if verbose {
+				fmt.Println(i, singalsContaining[i])
+			}
 		}
 
 		ssd := &SevenSegmentDisplay{}
@@ -212,6 +228,47 @@ func getSevenSegmentDisplaysFromSignals(signals [][]string) []*SevenSegmentDispl
 	}
 
 	return ssdArr
+}
+
+// getDecodedOutput gets the decoded output from the signals.
+func getDecodedOutput(output [][]string, ssdArr []*SevenSegmentDisplay) [][]int {
+	var decodedOutput [][]int
+
+	for line, signals := range output {
+		decodedLine := []int{}
+
+		for _, signal := range signals {
+			ssd := ssdArr[line]
+			decodedLine = append(decodedLine, ssd.getNumForSignal(signal))
+		}
+
+		decodedOutput = append(decodedOutput, decodedLine)
+	}
+
+	return decodedOutput
+}
+
+// decodedOutputToNumbers converts the decoded output to numbers.
+func decodedOutputToNumbers(decodedOutput [][]int) []int {
+	var numbers []int
+
+	for _, digits := range decodedOutput {
+		num, _ := strconv.Atoi(helpers.IntArrayToString(digits, ""))
+		numbers = append(numbers, num)
+	}
+
+	return numbers
+}
+
+// sumDecodedNumbers sums the decoded numbers.
+func sumDecodedNumbers(numbers []int) int {
+	sum := 0
+
+	for _, num := range numbers {
+		sum += num
+	}
+
+	return sum
 }
 
 // main is the entry point for the application.
@@ -241,8 +298,26 @@ func main() {
 	// get the 7-segment display from the singnals
 	ssdArr := getSevenSegmentDisplaysFromSignals(signals)
 
-	// print the 7-segment display
-	for line, ssd := range ssdArr {
-		fmt.Printf("Line %d, 7-segment display: %v\n", line, ssd)
+	// get the decoded output from the 7-segment displays
+	decodedOutput := getDecodedOutput(output, ssdArr)
+
+	decodedNumbers := decodedOutputToNumbers(decodedOutput)
+
+	sumOfNumbers := sumDecodedNumbers(decodedNumbers)
+
+	// print the decoded output
+	fmt.Printf("Decoded output: %v\n\n", decodedNumbers)
+	fmt.Printf("Sum of output: %d\n", sumOfNumbers)
+
+	// print the 7-segment displays
+	if verbose {
+		fmt.Println()
+		for line, ssd := range ssdArr {
+			fmt.Printf("Line %d, 7-segment display:\n%s\n", line, ssd.toString())
+			for i := 0; i < 10; i++ {
+				fmt.Printf("%d: %s\n", i, ssd.getSingalForNum(i))
+			}
+			fmt.Println()
+		}
 	}
 }
