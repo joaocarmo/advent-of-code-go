@@ -122,8 +122,6 @@ func main() {
 
 	// part 2
 	topThreeElfsWithTheMostCalories, topThreeElfsMostCalories := findTheTopThreeElfsWithTheMostCalories(totalNumberOfCaloriesEachElfIsCarrying)
-
-	// print the text lines
 	fmt.Printf(
 		"[Part Two] The answer is: %7d\t(elfs #%d #%d #%d)\n",
 		topThreeElfsMostCalories, topThreeElfsWithTheMostCalories[0] + 1,
