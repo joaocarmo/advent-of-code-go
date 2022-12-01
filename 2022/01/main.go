@@ -110,15 +110,24 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// process the file
+	totalNumberOfCaloriesEachElfIsCarrying := calculateTotalNumberOfCaloriesEachElfIsCarrying(txtlines)
 
 	// part 1
-	totalNumberOfCaloriesEachElfIsCarrying := calculateTotalNumberOfCaloriesEachElfIsCarrying(txtlines)
 	elfWithTheMostCalories, mostCalories := findTheElfWithTheMostCalories(totalNumberOfCaloriesEachElfIsCarrying)
-	fmt.Printf("[Part One] The answer is: %d\t\t (elf #%d)\n", mostCalories, elfWithTheMostCalories + 1)
+	fmt.Printf(
+		"[Part One] The answer is: %7d\t(elf  #%d)\n",
+		mostCalories,
+		elfWithTheMostCalories + 1,
+	)
 
 	// part 2
 	topThreeElfsWithTheMostCalories, topThreeElfsMostCalories := findTheTopThreeElfsWithTheMostCalories(totalNumberOfCaloriesEachElfIsCarrying)
 
 	// print the text lines
-	fmt.Printf("[Part Two] The answer is: %d\t (elfs #%d #%d #%d)\n", topThreeElfsMostCalories, topThreeElfsWithTheMostCalories[0] + 1, topThreeElfsWithTheMostCalories[1] + 1, topThreeElfsWithTheMostCalories[2] + 1)
+	fmt.Printf(
+		"[Part Two] The answer is: %7d\t(elfs #%d #%d #%d)\n",
+		topThreeElfsMostCalories, topThreeElfsWithTheMostCalories[0] + 1,
+		topThreeElfsWithTheMostCalories[1] + 1,
+		topThreeElfsWithTheMostCalories[2] + 1,
+	)
 }
