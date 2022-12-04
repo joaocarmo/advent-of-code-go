@@ -51,19 +51,14 @@ func calculateItemsPriority(itemMap map[rune]int, items []string) []int {
 	return itemsPriority
 }
 
-// findCommonItemsInRucksack finds the common items in a rucksack
-func findCommonItemsInRucksack(items string) []string {
-	// split the string in half
-	half := len(items) / 2
-	firstHalf := strings.Split(items[:half], "")
-	secondHalf := strings.Split(items[half:], "")
-
+// findCommongItemsInArrays finds the common items in two arrays
+func findCommongItemsInArrays(arr1 []string, arr2 []string) []string {
 	// create a map to store the items found
 	commonItems := make(map[string]bool)
 
 	// find the common items
-	for _, item := range firstHalf {
-		if !commonItems[item] && helpers.StrArrayContains(secondHalf, item) {
+	for _, item := range arr1 {
+		if !commonItems[item] && helpers.StrArrayContains(arr2, item) {
 			commonItems[item] = true
 		}
 	}
@@ -77,6 +72,19 @@ func findCommonItemsInRucksack(items string) []string {
 	return commonItemsSlice
 }
 
+// findCommonItemsInRucksack finds the common items in a rucksack
+func findCommonItemsInRucksack(items string) []string {
+	// split the string in half
+	half := len(items) / 2
+	firstHalf := strings.Split(items[:half], "")
+	secondHalf := strings.Split(items[half:], "")
+
+	// convert the map to a slice
+	commonItemsSlice := findCommongItemsInArrays(firstHalf, secondHalf)
+
+	return commonItemsSlice
+}
+
 // findCommonItemInRucksacks finds the common item in a list of rucksacks
 func findCommonItemInRucksacks(items []string) []string {
 	commonItemInRucksacks := []string{}
@@ -84,6 +92,29 @@ func findCommonItemInRucksacks(items []string) []string {
 	for _, item := range items {
 		commonItems := findCommonItemsInRucksack(item)
 		commonItemInRucksacks = append(commonItemInRucksacks, commonItems[0])
+	}
+
+	return commonItemInRucksacks
+}
+
+// findCommonItemInRucksacksPerGroup finds the common item in a list of rucksacks
+func findCommonItemInRucksacksPerGroup(items []string) []string {
+	groupSize := 3
+	commonItemInRucksacks := []string{}
+
+	for i := 0; i < len(items); i += groupSize {
+		groupItems := items[i : i+groupSize]
+
+		commonItems := [][]string{}
+		for j := 0; j < groupSize - 1; j += 1 {
+			firstGroupItems := strings.Split(groupItems[j], "")
+			secondGroupItems := strings.Split(groupItems[j+1], "")
+			commonItems = append(commonItems, findCommongItemsInArrays(firstGroupItems, secondGroupItems))
+		}
+
+		commonItemsInRucksacks := findCommongItemsInArrays(commonItems[0], commonItems[1])
+
+		commonItemInRucksacks = append(commonItemInRucksacks, commonItemsInRucksacks[0])
 	}
 
 	return commonItemInRucksacks
@@ -117,5 +148,14 @@ func main() {
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
 		totalPriority,
+	)
+
+	// part 2
+	commonItemsPerGroup := findCommonItemInRucksacksPerGroup(txtlines)
+	commonItemsPerGroupPriority := calculateItemsPriority(runeToInt, commonItemsPerGroup)
+	totalPerGroupPriority := calculateTotalPriorities(commonItemsPerGroupPriority)
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		totalPerGroupPriority,
 	)
 }
