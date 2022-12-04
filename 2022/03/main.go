@@ -63,7 +63,7 @@ func findCommonItemsInRucksack(items string) []string {
 
 	// find the common items
 	for _, item := range firstHalf {
-		if helpers.StrArrayContains(secondHalf, item) {
+		if !commonItems[item] && helpers.StrArrayContains(secondHalf, item) {
 			commonItems[item] = true
 		}
 	}
