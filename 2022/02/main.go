@@ -183,12 +183,13 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// parse the file
+	// process the file
 	shapes := convertInputToShapes(txtlines)
 
-	// calculate the total score
+	// part 1
 	totalScore := calculateTotalScore(shapes)
-
-	// print the text lines
-	fmt.Println(totalScore)
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		totalScore,
+	)
 }
