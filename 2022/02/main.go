@@ -12,8 +12,8 @@ const WHITESPACE = " "
 // Shape is a type of shape for the game (enum)
 type Shape int
 
-// Result is a type of result for the game (enum)
-type Result int
+// Outcome is a type of outcome for the game (enum)
+type Outcome int
 
 const (
 	Rock Shape = iota
@@ -22,7 +22,7 @@ const (
 )
 
 const (
-	Draw Result = iota
+	Draw Outcome = iota
 	Win
 	Lose
 )
@@ -51,8 +51,8 @@ func (s Shape) Int() int {
 	return 0
 }
 
-func (r Result) String() string {
-	switch r {
+func (o Outcome) String() string {
+	switch o {
 	case Draw:
 		return "Draw"
 	case Win:
@@ -63,8 +63,8 @@ func (r Result) String() string {
 	return ""
 }
 
-func (r Result) Int() int {
-	switch r {
+func (o Outcome) Int() int {
+	switch o {
 	case Draw:
 		return 3
 	case Win:
@@ -115,6 +115,36 @@ func calculateOutcome(opponent Shape, response Shape) int {
 	return 0
 }
 
+// calculateResponse calculates the response of a round
+func calculateResponse(opponent Shape, outcome Outcome) Shape {
+	if outcome == Draw {
+		return opponent
+	}
+
+	switch outcome {
+	case Win:
+		switch opponent {
+		case Rock:
+			return Paper
+		case Paper:
+			return Scissors
+		case Scissors:
+			return Rock
+		}
+	case Lose:
+		switch opponent {
+		case Rock:
+			return Scissors
+		case Paper:
+			return Rock
+		case Scissors:
+			return Paper
+		}
+	}
+
+	return 0
+}
+
 // calculateRoundScore calculates the score for a round
 func calculateRoundScore(opponent Shape, response Shape) int {
 	scoreForChosenShape := calculateScore(response)
@@ -124,11 +154,11 @@ func calculateRoundScore(opponent Shape, response Shape) int {
 }
 
 // calculateTotalScore calculates the total score for the game
-func calculateTotalScore(shapes [][]Shape) int {
+func calculateTotalScore(s1 []Shape, s2 []Shape) int {
 	totalScore := 0
 
-	for _, shape := range shapes {
-		totalScore += calculateRoundScore(shape[0], shape[1])
+	for i, shape := range s1 {
+		totalScore += calculateRoundScore(shape, s2[i])
 	}
 
 	return totalScore
@@ -147,7 +177,7 @@ func convertOpponentToShape(input string) Shape {
 	return 0
 }
 
-// convertResponseToShape converts the response to a shape
+// convertResponseToShape converts the response to a shape (part 1)
 func convertResponseToShape(input string) Shape {
 	switch input {
 	case "X":
@@ -160,20 +190,60 @@ func convertResponseToShape(input string) Shape {
 	return 0
 }
 
-// convertInputToShapes converts the input to shapes
-func convertInputToShapes(input []string) [][]Shape {
-	shapes := make([][]Shape, len(input))
+// convertResponseToShape converts the response to a shape (part 2)
+func convertResponseToOutcome(input string) Outcome {
+	switch input {
+	case "X":
+		return Lose
+	case "Y":
+		return Draw
+	case "Z":
+		return Win
+	}
+	return 0
+}
+
+// convertShapesAndOutcomesToResponses converts the shapes and outcomes to responses
+func convertShapesAndOutcomesToResponses(opponent []Shape, outcome []Outcome) []Shape {
+	responses := make([]Shape, len(opponent))
+
+	for i, shape := range opponent {
+		responses[i] = calculateResponse(shape, outcome[i])
+	}
+
+	return responses
+}
+
+// convertInputToShapes converts the input to shapes (part 1)
+func convertInputToShapes(input []string) ([]Shape, []Shape) {
+	shapes := make([]Shape, len(input))
+	responses := make([]Shape, len(input))
 
 	for i, line := range input {
 		// split the line by a white space into two parts
 		strategy := strings.Split(line, WHITESPACE)
 
-		shapes[i] = make([]Shape, 2)
-		shapes[i][0] = convertOpponentToShape(string(strategy[0]))
-		shapes[i][1] = convertResponseToShape(string(strategy[1]))
+		shapes[i] = convertOpponentToShape(string(strategy[0]))
+		responses[i] = convertResponseToShape(string(strategy[1]))
 	}
 
-	return shapes
+	return shapes, responses
+}
+
+// convertInputToShapes converts the input to shapes (part 2)
+func convertInputToShapesAndOutcomes(input []string) ([]Shape, []Outcome) {
+	shapes := make([]Shape, len(input))
+	outcomes := make([]Outcome, len(input))
+
+	for i, line := range input {
+		// split the line by a white space into two parts
+		strategy := strings.Split(line, WHITESPACE)
+
+		shapes[i] = convertOpponentToShape(string(strategy[0]))
+		outcomes[i] = convertResponseToOutcome(string(strategy[1]))
+	}
+
+	return shapes, outcomes
 }
 
 // main is the entry point for the application
@@ -184,12 +254,21 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// process the file
-	shapes := convertInputToShapes(txtlines)
+	shapesPartOne, responsesPartOne := convertInputToShapes(txtlines)
 
 	// part 1
-	totalScore := calculateTotalScore(shapes)
+	totalScorePartOne := calculateTotalScore(shapesPartOne, responsesPartOne)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
-		totalScore,
+		totalScorePartOne,
+	)
+
+	// part 2
+	shapes, outcomes := convertInputToShapesAndOutcomes(txtlines)
+	responses := convertShapesAndOutcomesToResponses(shapes, outcomes)
+	totalScorePartTwo := calculateTotalScore(shapes, responses)
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		totalScorePartTwo,
 	)
 }
