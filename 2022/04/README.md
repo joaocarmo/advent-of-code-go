@@ -61,6 +61,8 @@ pair would be exclusively cleaning sections their partner will already be
 cleaning, so these seem like the most in need of reconsideration. In this
 example, there are **`2`** such pairs.
 
+**In how many assignment pairs does one range fully contain the other?**
+
 ## Part Two
 
 It seems like there is still quite a bit of duplicate work planned. Instead, the
