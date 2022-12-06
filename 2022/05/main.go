@@ -38,6 +38,41 @@ func getTopCratesFromStacks(stacks Stacks) string {
 	return topCrates
 }
 
+// arrangeMultipleStacksByProcedure arranges the stacks by a procedure (part 2)
+func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
+	if procedure.Move < 1 {
+		return stacks
+	}
+
+	// remove the `move` crates from the `from` stack
+	startIndex := len(stacks[procedure.From]) - procedure.Move
+	lastIndex := len(stacks[procedure.From])
+	crates := stacks[procedure.From][startIndex:lastIndex]
+	stacks[procedure.From] = stacks[procedure.From][:startIndex]
+
+	// add the crates to the `to` stack
+	stacks[procedure.To] = append(stacks[procedure.To], crates...)
+
+	return stacks
+}
+
+// arrangeMultipleStacks arranges the stacks by a slice of procedures (part 2)
+func arrangeMultipleStacks(stacks Stacks, procedures []Procedure) Stacks {
+	// copy the stacks
+	arrangedStacks := make(Stacks)
+
+	for key, value := range stacks {
+		arrangedStacks[key] = value
+	}
+
+	// arrange the stacks
+	for _, procedure := range procedures {
+		arrangedStacks = arrangeMultipleStacksByProcedure(arrangedStacks, procedure)
+	}
+
+	return arrangedStacks
+}
+
 // arrangeStacksByProcedure arranges the stacks by a procedure
 func arrangeStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
 	if procedure.Move < 1 {
@@ -177,5 +212,13 @@ func main() {
 	fmt.Printf(
 		"[Part One] The answer is: %s\n",
 		topCrates,
+	)
+
+	// part 2
+	arrangedMultiStacks := arrangeMultipleStacks(parsedStacks, parsedProcedures)
+	topMultiCrates := getTopCratesFromStacks(arrangedMultiStacks)
+	fmt.Printf(
+		"[Part Two] The answer is: %s\n",
+		topMultiCrates,
 	)
 }
