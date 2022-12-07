@@ -11,8 +11,19 @@ func IntArrayContains(arr []int, el int) bool {
 	return false
 }
 
-// StrArrayContains checks whether an string belogs to an array of string.
+// StrArrayContains checks whether a string belogs to an array of strings.
 func StrArrayContains(arr []string, el string) bool {
+	for _, arrEl := range arr {
+		if arrEl == el {
+			return true
+		}
+	}
+
+	return false
+}
+
+// RuneArrayContains checks whether a rune belogs to an array of runes.
+func RuneArrayContains(arr []rune, el rune) bool {
 	for _, arrEl := range arr {
 		if arrEl == el {
 			return true
