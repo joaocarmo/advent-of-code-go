@@ -11,10 +11,10 @@ import (
 const ELF_SEPARATOR = ","
 const SECTION_SEPARATOR = "-"
 
-// Section represents a section of the cleaning area [start, end]
+// Section represents a section of the cleaning area [start, end].
 type Section []int
 
-// isPartiallyOverlapping checks if the sections are overlapping at all
+// isPartiallyOverlapping checks if the sections are overlapping at all.
 func isPartiallyOverlapping(sections []Section) bool {
 	sectionA := sections[0]
 	sectionB := sections[1]
@@ -32,7 +32,7 @@ func isPartiallyOverlapping(sections []Section) bool {
 	return false
 }
 
-// isFullyOverlapping checks if the sections are fully overlapping
+// isFullyOverlapping checks if the sections are fully overlapping.
 func isFullyOverlapping(sections []Section) bool {
 	sectionA := sections[0]
 	sectionB := sections[1]
@@ -54,7 +54,7 @@ func isFullyOverlapping(sections []Section) bool {
 	return false
 }
 
-// findPartiallyOverlappingSections finds the overlapping sections
+// findPartiallyOverlappingSections finds the overlapping sections.
 func findPartiallyOverlappingSections(cleaningSections [][]Section) [][]Section {
 	var overlappingSections [][]Section
 
@@ -67,7 +67,7 @@ func findPartiallyOverlappingSections(cleaningSections [][]Section) [][]Section 
 	return overlappingSections
 }
 
-// findFullyOverlappingSections finds the fully overlapping sections
+// findFullyOverlappingSections finds the fully overlapping sections.
 func findFullyOverlappingSections(cleaningSections [][]Section) [][]Section {
 	var overlappingSections [][]Section
 
@@ -80,7 +80,7 @@ func findFullyOverlappingSections(cleaningSections [][]Section) [][]Section {
 	return overlappingSections
 }
 
-// getCleaningSectionsFromInput returns the cleaning sections from the input
+// getCleaningSectionsFromInput returns the cleaning sections from the input.
 func getCleaningSectionsFromInput(input []string) [][]Section {
 	var cleaningSections [][]Section
 

@@ -8,9 +8,10 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+// ALPHABET is the english alphabet.
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
-// createRuneToIntoMap creates a map of runes to integers
+// createRuneToIntoMap creates a map of runes to integers.
 func createRuneToIntoMap() map[rune]int {
 	counterStart := 1
 	runeToInt := make(map[rune]int)
@@ -29,7 +30,7 @@ func createRuneToIntoMap() map[rune]int {
 	return runeToInt
 }
 
-// calculateItemPriority calculates the priority of an item
+// calculateItemPriority calculates the priority of an item.
 func calculateItemPriority(itemMap map[rune]int, item string) int {
 	priority := 0
 
@@ -40,7 +41,7 @@ func calculateItemPriority(itemMap map[rune]int, item string) int {
 	return priority
 }
 
-// calculateItemsPriority calculates the priority of a list of items
+// calculateItemsPriority calculates the priority of a list of items.
 func calculateItemsPriority(itemMap map[rune]int, items []string) []int {
 	itemsPriority := []int{}
 
@@ -51,7 +52,7 @@ func calculateItemsPriority(itemMap map[rune]int, items []string) []int {
 	return itemsPriority
 }
 
-// findCommongItemsInArrays finds the common items in two arrays
+// findCommongItemsInArrays finds the common items in two arrays.
 func findCommongItemsInArrays(arr1 []string, arr2 []string) []string {
 	// create a map to store the items found
 	commonItems := make(map[string]bool)
@@ -72,7 +73,7 @@ func findCommongItemsInArrays(arr1 []string, arr2 []string) []string {
 	return commonItemsSlice
 }
 
-// findCommonItemsInRucksack finds the common items in a rucksack
+// findCommonItemsInRucksack finds the common items in a rucksack.
 func findCommonItemsInRucksack(items string) []string {
 	// split the string in half
 	half := len(items) / 2
@@ -85,7 +86,7 @@ func findCommonItemsInRucksack(items string) []string {
 	return commonItemsSlice
 }
 
-// findCommonItemInRucksacks finds the common item in a list of rucksacks
+// findCommonItemInRucksacks finds the common item in a list of rucksacks.
 func findCommonItemInRucksacks(items []string) []string {
 	commonItemInRucksacks := []string{}
 
@@ -97,7 +98,7 @@ func findCommonItemInRucksacks(items []string) []string {
 	return commonItemInRucksacks
 }
 
-// findCommonItemInRucksacksPerGroup finds the common item in a list of rucksacks
+// findCommonItemInRucksacksPerGroup finds the common item in a list of rucksacks.
 func findCommonItemInRucksacksPerGroup(items []string) []string {
 	groupSize := 3
 	commonItemInRucksacks := []string{}
@@ -120,7 +121,7 @@ func findCommonItemInRucksacksPerGroup(items []string) []string {
 	return commonItemInRucksacks
 }
 
-// calculateTotalPriorities calculates the total priority of a list of priorities
+// calculateTotalPriorities calculates the total priority of a list of priorities.
 func calculateTotalPriorities(priorities []int) int {
 	totalPriority := 0
 

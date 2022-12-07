@@ -9,10 +9,10 @@ import (
 
 const WHITESPACE = " "
 
-// Shape is a type of shape for the game (enum)
+// Shape is a type of shape for the game (enum).
 type Shape int
 
-// Outcome is a type of outcome for the game (enum)
+// Outcome is a type of outcome for the game (enum).
 type Outcome int
 
 const (
@@ -75,7 +75,7 @@ func (o Outcome) Int() int {
 	return 0
 }
 
-// calculateScore calculates the score for a chosen shape
+// calculateScore calculates the score for a chosen shape.
 func calculateScore(response Shape) int {
 	switch response {
 	case Rock:
@@ -88,7 +88,7 @@ func calculateScore(response Shape) int {
 	return 0
 }
 
-// calculateOutcome calculates the outcome of a round
+// calculateOutcome calculates the outcome of a round.
 func calculateOutcome(opponent Shape, response Shape) int {
 	if opponent == response {
 		return Draw.Int()
@@ -115,7 +115,7 @@ func calculateOutcome(opponent Shape, response Shape) int {
 	return 0
 }
 
-// calculateResponse calculates the response of a round
+// calculateResponse calculates the response of a round.
 func calculateResponse(opponent Shape, outcome Outcome) Shape {
 	if outcome == Draw {
 		return opponent
@@ -145,7 +145,7 @@ func calculateResponse(opponent Shape, outcome Outcome) Shape {
 	return 0
 }
 
-// calculateRoundScore calculates the score for a round
+// calculateRoundScore calculates the score for a round.
 func calculateRoundScore(opponent Shape, response Shape) int {
 	scoreForChosenShape := calculateScore(response)
 	scoreForRoundOutcome := calculateOutcome(opponent, response)
@@ -153,7 +153,7 @@ func calculateRoundScore(opponent Shape, response Shape) int {
 	return scoreForChosenShape + scoreForRoundOutcome
 }
 
-// calculateTotalScore calculates the total score for the game
+// calculateTotalScore calculates the total score for the game.
 func calculateTotalScore(s1 []Shape, s2 []Shape) int {
 	totalScore := 0
 
@@ -164,7 +164,7 @@ func calculateTotalScore(s1 []Shape, s2 []Shape) int {
 	return totalScore
 }
 
-// convertOpponentToShape converts the opponent's response to a shape
+// convertOpponentToShape converts the opponent's response to a shape.
 func convertOpponentToShape(input string) Shape {
 	switch input {
 	case "A":
@@ -177,7 +177,7 @@ func convertOpponentToShape(input string) Shape {
 	return 0
 }
 
-// convertResponseToShape converts the response to a shape (part 1)
+// convertResponseToShape converts the response to a shape (part 1).
 func convertResponseToShape(input string) Shape {
 	switch input {
 	case "X":
@@ -190,7 +190,7 @@ func convertResponseToShape(input string) Shape {
 	return 0
 }
 
-// convertResponseToShape converts the response to a shape (part 2)
+// convertResponseToShape converts the response to a shape (part 2).
 func convertResponseToOutcome(input string) Outcome {
 	switch input {
 	case "X":
@@ -203,7 +203,7 @@ func convertResponseToOutcome(input string) Outcome {
 	return 0
 }
 
-// convertShapesAndOutcomesToResponses converts the shapes and outcomes to responses
+// convertShapesAndOutcomesToResponses converts the shapes and outcomes to responses.
 func convertShapesAndOutcomesToResponses(opponent []Shape, outcome []Outcome) []Shape {
 	responses := make([]Shape, len(opponent))
 
@@ -214,7 +214,7 @@ func convertShapesAndOutcomesToResponses(opponent []Shape, outcome []Outcome) []
 	return responses
 }
 
-// convertInputToShapes converts the input to shapes (part 1)
+// convertInputToShapes converts the input to shapes (part 1).
 func convertInputToShapes(input []string) ([]Shape, []Shape) {
 	shapes := make([]Shape, len(input))
 	responses := make([]Shape, len(input))
@@ -230,7 +230,7 @@ func convertInputToShapes(input []string) ([]Shape, []Shape) {
 	return shapes, responses
 }
 
-// convertInputToShapes converts the input to shapes (part 2)
+// convertInputToShapes converts the input to shapes (part 2).
 func convertInputToShapesAndOutcomes(input []string) ([]Shape, []Outcome) {
 	shapes := make([]Shape, len(input))
 	outcomes := make([]Outcome, len(input))
@@ -246,7 +246,7 @@ func convertInputToShapesAndOutcomes(input []string) ([]Shape, []Outcome) {
 	return shapes, outcomes
 }
 
-// main is the entry point for the application
+// main is the entry point for the application.
 func main() {
 	// read the file
 	args := helpers.ReadArguments()

@@ -7,7 +7,7 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-// distributeSnacksEachElfIsCarrying distributes the snacks each elf is carrying
+// distributeSnacksEachElfIsCarrying distributes the snacks each elf is carrying.
 func distributeSnacksEachElfIsCarrying(input []string) [][]int {
 	// Each elf has a list of snacks per line
 	// Blank lines separate each elf
@@ -35,7 +35,7 @@ func distributeSnacksEachElfIsCarrying(input []string) [][]int {
 	return elfs
 }
 
-// calculateTotalNumberOfCaloriesEachElfIsCarrying calculates the total number of calories each elf is carrying
+// calculateTotalNumberOfCaloriesEachElfIsCarrying calculates the total number of calories each elf is carrying.
 func calculateTotalNumberOfCaloriesEachElfIsCarrying(input []string) []int {
 	snacksEachElfIsCarrying := distributeSnacksEachElfIsCarrying(input)
 
@@ -54,7 +54,7 @@ func calculateTotalNumberOfCaloriesEachElfIsCarrying(input []string) []int {
 	return totalNumberOfCaloriesEachElfIsCarrying
 }
 
-// findTheElfWithTheMostCalories finds the elf with the most calories
+// findTheElfWithTheMostCalories finds the elf with the most calories.
 func findTheElfWithTheMostCalories(input []int) (int, int) {
 	var elfWithTheMostCalories int
 	var mostCalories int
@@ -69,7 +69,7 @@ func findTheElfWithTheMostCalories(input []int) (int, int) {
 	return elfWithTheMostCalories, mostCalories
 }
 
-// findTheTopThreeElfsWithTheMostCalories finds the top three elfs with the most calories
+// findTheTopThreeElfsWithTheMostCalories finds the top three elfs with the most calories.
 func findTheTopThreeElfsWithTheMostCalories(input []int) ([]int, int) {
 	var topThreeElfsWithTheMostCalories []int
 	topThreeElfsMostCalories := 0

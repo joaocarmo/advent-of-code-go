@@ -19,7 +19,7 @@ type Procedure struct {
 
 type Stacks map[int][]string
 
-// getTopCratesFromStacks returns the top crates from the stacks
+// getTopCratesFromStacks returns the top crates from the stacks.
 func getTopCratesFromStacks(stacks Stacks) string {
 	var topCrates string
 
@@ -38,7 +38,7 @@ func getTopCratesFromStacks(stacks Stacks) string {
 	return topCrates
 }
 
-// arrangeMultipleStacksByProcedure arranges the stacks by a procedure (part 2)
+// arrangeMultipleStacksByProcedure arranges the stacks by a procedure (part 2).
 func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
 	if procedure.Move < 1 {
 		return stacks
@@ -56,7 +56,7 @@ func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks
 	return stacks
 }
 
-// arrangeMultipleStacks arranges the stacks by a slice of procedures (part 2)
+// arrangeMultipleStacks arranges the stacks by a slice of procedures (part 2).
 func arrangeMultipleStacks(stacks Stacks, procedures []Procedure) Stacks {
 	// copy the stacks
 	arrangedStacks := make(Stacks)
@@ -73,7 +73,7 @@ func arrangeMultipleStacks(stacks Stacks, procedures []Procedure) Stacks {
 	return arrangedStacks
 }
 
-// arrangeStacksByProcedure arranges the stacks by a procedure
+// arrangeStacksByProcedure arranges the stacks by a procedure.
 func arrangeStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
 	if procedure.Move < 1 {
 		return stacks
@@ -93,7 +93,7 @@ func arrangeStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
 	return arrangeStacksByProcedure(stacks, procedure)
 }
 
-// arrangeStacks arranges the stacks by a slice of procedures
+// arrangeStacks arranges the stacks by a slice of procedures.
 func arrangeStacks(stacks Stacks, procedures []Procedure) Stacks {
 	// copy the stacks
 	arrangedStacks := make(Stacks)
@@ -110,7 +110,7 @@ func arrangeStacks(stacks Stacks, procedures []Procedure) Stacks {
 	return arrangedStacks
 }
 
-// parseProcedure parses a procedure into a Procedure struct
+// parseProcedure parses a procedure into a Procedure struct.
 func parseProcedure(procedure string) Procedure {
 	var parsedProcedure Procedure
 
@@ -124,7 +124,7 @@ func parseProcedure(procedure string) Procedure {
 	return parsedProcedure
 }
 
-// parseProcedures parses the procedures into a slice of Procedure structs
+// parseProcedures parses the procedures into a slice of Procedure structs.
 func parseProcedures(procedures []string) []Procedure {
 	var parsedProcedures []Procedure
 
@@ -136,7 +136,7 @@ func parseProcedures(procedures []string) []Procedure {
 	return parsedProcedures
 }
 
-// parseStacks parses the stacks into a map of stacks
+// parseStacks parses the stacks into a map of stacks.
 func parseStacks(stacks []string) Stacks {
 	// create map of stacks using numbers as keys
 	stacksMap := make(Stacks)
@@ -172,7 +172,7 @@ func parseStacks(stacks []string) Stacks {
 	return stacksMap
 }
 
-// getStacksAndProcedures returns the stacks and procedures from the input
+// getStacksAndProcedures returns the stacks and procedures from the input.
 func getStacksAndProcedures(input []string) ([]string, []string) {
 	var stacks []string
 	var procedures []string
