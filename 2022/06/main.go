@@ -25,7 +25,7 @@ func getCharactersBeforePacketMarker(message string) int {
 			// remove the elements up to it from the list
 			var removedCharacter rune
 			var newList []rune
-			for removedCharacter != character && len(newList) != startOfPacketMarker {
+			for removedCharacter != character {
 				removedCharacter, newList = pop(0, charactersSeen)
 				charactersSeen = newList
 			}
