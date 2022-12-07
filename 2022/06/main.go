@@ -7,16 +7,17 @@ import (
 )
 
 const startOfPacketMarker = 4
+const startOfMessageMarker = 14
 
-// pop removes the nth element from a slice
+// pop removes the nth element from a slice.
 func pop(i int, xs []rune) (rune, []rune) {
   y := xs[i]
   ys := append(xs[:i], xs[i+1:]...)
   return y, ys
 }
 
-// getCharactersBeforePacketMarker returns the number of characters before the packet marker
-func getCharactersBeforePacketMarker(message string) int {
+// getCharactersBeforePacketMarker returns the number of characters before the packet marker.
+func getCharactersBeforePacketMarker(message string, startMarker int) int {
 	var charactersSeen []rune
 	var numCharactersSeen int
 
@@ -33,7 +34,7 @@ func getCharactersBeforePacketMarker(message string) int {
 
 		charactersSeen = append(charactersSeen, character)
 
-		if len(charactersSeen) == startOfPacketMarker {
+		if len(charactersSeen) == startMarker {
 			numCharactersSeen = count
 			break
 		}
@@ -42,12 +43,15 @@ func getCharactersBeforePacketMarker(message string) int {
 	return numCharactersSeen + 1
 }
 
-// getCharactersBeforePacketMarkers returns the number of characters before the packet marker for each line
-func getCharactersBeforePacketMarkers(messages []string) []int {
+// getCharactersBeforePacketMarkers returns the number of characters before the packet marker for each line.
+func getCharactersBeforePacketMarkers(messages []string, startMarker int) []int {
 	var charactersBeforePacketMarker []int
 
 	for _, message := range messages {
-		charactersBeforePacketMarker = append(charactersBeforePacketMarker, getCharactersBeforePacketMarker(message))
+		charactersBeforePacketMarker = append(
+			charactersBeforePacketMarker,
+			getCharactersBeforePacketMarker(message, startMarker),
+		)
 	}
 
 	return charactersBeforePacketMarker
@@ -61,9 +65,22 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// part 1
-	charactersBeforePacketMarker := getCharactersBeforePacketMarkers(txtlines)
+	charactersBeforePacketMarker := getCharactersBeforePacketMarkers(
+		txtlines,
+		startOfPacketMarker,
+	)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
 		charactersBeforePacketMarker[0],
+	)
+
+	// part 2
+	charactersBeforeMessageMarker := getCharactersBeforePacketMarkers(
+		txtlines,
+		startOfMessageMarker,
+	)
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		charactersBeforeMessageMarker[0],
 	)
 }
