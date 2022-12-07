@@ -11,6 +11,8 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+const verbose = false
+
 type Procedure struct {
 	Move int
 	From int
@@ -40,18 +42,34 @@ func getTopCratesFromStacks(stacks Stacks) string {
 
 // arrangeMultipleStacksByProcedure arranges the stacks by a procedure (part 2).
 func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
-	if procedure.Move < 1 {
-		return stacks
+	if verbose {
+		fmt.Println("==============================================")
+		fmt.Printf(" -> move %d from %d to %d\n", procedure.Move, procedure.From, procedure.To)
+		fmt.Println("==============================================")
+		for key, value := range stacks {
+			fmt.Printf("stack %d: %s\n", key, strings.Join(value, ", "))
+		}
+		fmt.Println("----------------------------------------------")
 	}
 
-	// remove the `move` crates from the `from` stack
-	startIndex := len(stacks[procedure.From]) - procedure.Move
-	lastIndex := len(stacks[procedure.From])
-	crates := stacks[procedure.From][startIndex:lastIndex]
-	stacks[procedure.From] = stacks[procedure.From][:startIndex]
+	fromStack := stacks[procedure.From]
+	toStack := stacks[procedure.To]
+
+	indexOfFirstCrateToMove := len(fromStack) - procedure.Move
+
+	cratesToMove := fromStack[indexOfFirstCrateToMove:]
+
+	// remove the crates from the `from` stack
+	stacks[procedure.From] = fromStack[:indexOfFirstCrateToMove]
 
 	// add the crates to the `to` stack
-	stacks[procedure.To] = append(stacks[procedure.To], crates...)
+	stacks[procedure.To] = append(toStack, cratesToMove...)
+
+	if verbose {
+		for key, value := range stacks {
+			fmt.Printf("stack %d: %s\n", key, strings.Join(value, ", "))
+		}
+	}
 
 	return stacks
 }
