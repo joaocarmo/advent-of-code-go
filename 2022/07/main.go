@@ -220,6 +220,7 @@ func findFoldersToDelete(folder *Folder, minThreshold int64, maxThreshold int64)
 	return foldersToDelete
 }
 
+// findSmallestFolderToDelete returns the smallest folder to delete.
 func findSmallestFolderToDelete(folders []*Folder) *Folder {
 	smallestFolder := folders[0]
 
