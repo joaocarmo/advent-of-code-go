@@ -16,10 +16,12 @@ const PARENT_MARKER = ".."
 const DIR_SEPARATOR = "/"
 const COMMAND_MARKER = "$ "
 const COMMAND_ARGS_SEPARATOR = " "
-const FOLDER_MARKER = "dir"
+const FOLDER_MARKER = "dir "
 const FILE_SIZE_NAME_SEPARATOR = " "
 const FOLDER_MARKER_NAME_SEPARATOR = " "
 const FOLDER_SIZE_THRESHOLD = int64(100000)
+const TOTAL_SYSTEM_SPACE = int64(70000000)
+const TOTAL_REQUIRED_SPACE = int64(30000000)
 
 // File represents a file in the file system.
 type File struct {
@@ -203,18 +205,31 @@ func getTotalSizeFoldersToDelete(folders []*Folder) int64 {
 }
 
 // findFoldersToDelete returns the folders to delete.
-func findFoldersToDelete(folder *Folder, threshold int64) []*Folder {
+func findFoldersToDelete(folder *Folder, minThreshold int64, maxThreshold int64) []*Folder {
 	foldersToDelete := []*Folder{}
 
 	for _, subfolder := range folder.Folders {
-		if subfolder.getSize() <= threshold {
+		subfolderSize := subfolder.getSize()
+		if subfolderSize >= minThreshold && subfolderSize <= maxThreshold {
 			foldersToDelete = append(foldersToDelete, subfolder)
 		}
 
-		foldersToDelete = append(foldersToDelete, findFoldersToDelete(subfolder, threshold)...)
+		foldersToDelete = append(foldersToDelete, findFoldersToDelete(subfolder, minThreshold, maxThreshold)...)
 	}
 
 	return foldersToDelete
+}
+
+func findSmallestFolderToDelete(folders []*Folder) *Folder {
+	smallestFolder := folders[0]
+
+	for _, folder := range folders {
+		if folder.getSize() < smallestFolder.getSize() {
+			smallestFolder = folder
+		}
+	}
+
+	return smallestFolder
 }
 
 // main is the entry point for the application.
@@ -228,10 +243,21 @@ func main() {
 	filesystem := getFileSystem(txtlines)
 
 	// part 1
-	folderDeleteCandidates := findFoldersToDelete(filesystem, FOLDER_SIZE_THRESHOLD)
+	folderDeleteCandidates := findFoldersToDelete(filesystem, int64(0), FOLDER_SIZE_THRESHOLD)
 	totalSizeDeleteCandidates := getTotalSizeFoldersToDelete(folderDeleteCandidates)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
 		totalSizeDeleteCandidates,
+	)
+
+	// part 2
+	filesystemSize := filesystem.getSize()
+	updateSizeThreshold := TOTAL_REQUIRED_SPACE - (TOTAL_SYSTEM_SPACE - filesystemSize)
+	bigFolderDeleteCandidates := findFoldersToDelete(filesystem, updateSizeThreshold, filesystemSize)
+	smallestDeleteCandidate := findSmallestFolderToDelete(bigFolderDeleteCandidates)
+	totalSizeSmallestDeleteCandidate := smallestDeleteCandidate.getSize()
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		totalSizeSmallestDeleteCandidate,
 	)
 }
