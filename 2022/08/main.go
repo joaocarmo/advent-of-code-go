@@ -103,6 +103,58 @@ func (m Matrix) isVisible(x, y int) bool {
 	return isVisible
 }
 
+func (m Matrix) getScenicScore(x, y int) int {
+	if m.isEdge(x, y) {
+		return 0
+	}
+
+	viewingDistanceTop := 0
+	viewingDistanceBottom := 0
+	viewingDistanceLeft := 0
+	viewingDistanceRight := 0
+
+	height := m.get(x, y)
+
+	// search the top
+	for i := y - 1; i >= 0; i-- {
+		viewingDistanceTop++
+
+		if m.get(x, i) >= height {
+			break
+		}
+	}
+
+	// search the bottom
+	for i := y + 1; i < m.getColumnLength(); i++ {
+		viewingDistanceBottom++
+
+		if m.get(x, i) >= height {
+			break
+		}
+	}
+
+	// search the left
+	for i := x - 1; i >= 0; i-- {
+		viewingDistanceLeft++
+
+		if m.get(i, y) >= height {
+			break
+		}
+	}
+
+	// search the right
+	for i := x + 1; i < m.getRowLength(); i++ {
+		viewingDistanceRight++
+
+		if m.get(i, y) >= height {
+			break
+		}
+	}
+
+	return viewingDistanceTop * viewingDistanceBottom * viewingDistanceLeft * viewingDistanceRight
+}
+
+// String returns a string representation of the matrix.
 func (m Matrix) String() string {
 	s := ""
 
@@ -114,6 +166,19 @@ func (m Matrix) String() string {
 	}
 
 	return s
+}
+
+// calculateScenicScores returns the scenic scores for all points in the matrix.
+func calculateScenicScores(matrix Matrix) []int {
+	scenicScores := make([]int, 0)
+
+	for y := 0; y < matrix.getColumnLength(); y++ {
+		for x := 0; x < matrix.getRowLength(); x++ {
+			scenicScores = append(scenicScores, matrix.getScenicScore(x, y))
+		}
+	}
+
+	return scenicScores
 }
 
 // calculateNumVisibleFromOutside returns the number of visible points from the outside.
@@ -161,5 +226,13 @@ func main() {
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
 		numVisibleFromOutside,
+	)
+
+	// part 2
+	scenicScores := calculateScenicScores(matrix)
+	_, maxScenicScore := helpers.MinMax(scenicScores)
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		maxScenicScore,
 	)
 }
