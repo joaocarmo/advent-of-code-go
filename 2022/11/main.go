@@ -16,8 +16,10 @@ const NUM_OF_LINES_PER_MONKEY = 6
 const STARTING_ITEMS = "Starting items: "
 const STARTING_ITEMS_DELIMITER = ", "
 const OLD_VALUE = "old"
-const NUM_OF_ROUNDS = 20
-const RELIEF_DIVISOR = 3
+const NUM_OF_ROUNDS_PART_1 = 20
+const NUM_OF_ROUNDS_PART_2 = 1000
+const RELIEF_DIVISOR_PART_1 = 3
+const RELIEF_DIVISOR_PART_2 = 1
 const NUM_MOST_ACTIVE_MONKEYS = 2
 
 // Operation is an enum that represents the operation.
@@ -84,12 +86,12 @@ func (m *Monkey) inspect(item int) int {
 }
 
 // play plays the game for a single monkey.
-func (m *Monkey) play(monkeys []*Monkey) {
+func (m *Monkey) play(monkeys []*Monkey, reliefDivisor int) {
 	for _, item := range m.StartingItems {
 		// Monkey inspects the worry level item
 		newWorryLevel := m.inspect(item)
 		// Monkey gets bored
-		adjustedNewWorryLevel := newWorryLevel / RELIEF_DIVISOR
+		adjustedNewWorryLevel := newWorryLevel / reliefDivisor
 		// Monkey tests the worry level item
 		var throwToMonkey int
 		if m.Test(adjustedNewWorryLevel) {
@@ -200,8 +202,8 @@ func getMostActiveMonkeys(monkeys []*Monkey) []*Monkey {
 }
 
 // playKeepAway plays the game.
-func playKeepAway(monkeys []*Monkey) {
-	for i := 0; i < NUM_OF_ROUNDS; i++ {
+func playKeepAway(monkeys []*Monkey, numOfRounds, reliefDivisor int) {
+	for i := 0; i < numOfRounds; i++ {
 		if VERBOSE {
 			fmt.Println("Round", i + 1)
 		}
@@ -211,7 +213,7 @@ func playKeepAway(monkeys []*Monkey) {
 				fmt.Println("- Monkey", j)
 			}
 
-			monkey.play(monkeys)
+			monkey.play(monkeys, reliefDivisor)
 		}
 	}
 }
@@ -263,13 +265,13 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// process the file
-	monkeys := getMonkeysFromFile(txtlines)
+	monkeysA := getMonkeysFromFile(txtlines)
 
 	// play the game
-	playKeepAway(monkeys)
+	playKeepAway(monkeysA, NUM_OF_ROUNDS_PART_1, RELIEF_DIVISOR_PART_1)
 
 	if VERBOSE {
-		for i, monkey := range monkeys {
+		for i, monkey := range monkeysA {
 			fmt.Println(
 				"Monkey",
 				i,
@@ -285,7 +287,7 @@ func main() {
 	}
 
 	// part 1
-	mostActiveMonkeys := getMostActiveMonkeys(monkeys)
+	mostActiveMonkeys := getMostActiveMonkeys(monkeysA)
 	monkeyBusiness := calculateMonkeyBusiness(mostActiveMonkeys)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
