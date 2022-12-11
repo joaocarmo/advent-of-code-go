@@ -41,6 +41,23 @@ func MaxOf(vars ...int) int {
 	return max
 }
 
+// MinMax returns the minimum and maximum values of an array.
+func MinMax(array []int) (int, int) {
+    var max int = array[0]
+    var min int = array[0]
+
+    for _, value := range array {
+        if max < value {
+            max = value
+        }
+        if min > value {
+            min = value
+        }
+    }
+
+    return min, max
+}
+
 // Square returns the square of the given integer.
 func Square(x int) int {
 	return x * x
