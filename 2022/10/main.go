@@ -10,6 +10,12 @@ import (
 
 // Represents the separator between the operation and the argument.
 const OPERATION_ARGUMENT_SEPARATOR = " "
+// Represents a lit pixel.
+const PIXEL_LIT = "#"
+// Represents a dark pixel.
+const PIXEL_DARK = "."
+// Represents the width of the register.
+const REGISTER_WIDTH = 3
 
 // Operation is an enum that represents the operation.
 type Operation int
@@ -105,6 +111,41 @@ func newCPU() CPU {
 	}
 }
 
+// CRT is a struct that represents a CRT.
+type CRT struct {
+	Columns int
+	Rows    int
+}
+
+// drawSprite draws a sprite.
+func (c *CRT) drawSprite(cpu CPU) string {
+	var sprite string
+
+	for i := 0; i < c.Rows; i++ {
+		for j := 0; j < c.Columns; j++ {
+			cycle := i * c.Columns + j
+			register := cpu.history[cycle]
+
+			if helpers.AbsInt(register - j) < REGISTER_WIDTH - 1 {
+				sprite += PIXEL_LIT
+			} else {
+				sprite += PIXEL_DARK
+			}
+		}
+		sprite += "\n"
+	}
+
+	return sprite
+}
+
+// newCRT returns a new CRT.
+func newCRT(columns int, rows int) CRT {
+	return CRT{
+		Columns: columns,
+		Rows: rows,
+	}
+}
+
 // calcSignalStrength calculates the signal strength.
 func calcSignalStrength(input []int) int {
 	if len(input) == 2 {
@@ -175,8 +216,18 @@ func main() {
 	// part 1
 	cpu := newCPU()
 	cpu.executeAll(instructions)
-	fmt.Println(cpu)
 	history := cpu.getHistoryAt([]int{20, 60, 100, 140, 180, 220})
 	sumSignalStrength := calcSumSignalStrengths(history)
-	fmt.Println(sumSignalStrength)
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		sumSignalStrength,
+	)
+
+	// part 2
+	crt := newCRT(40, 6)
+	sprite := crt.drawSprite(cpu)
+	fmt.Printf(
+		"[Part Two] The answer is:\n%s\n",
+		sprite,
+	)
 }
