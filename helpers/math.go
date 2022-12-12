@@ -68,3 +68,30 @@ func Distance(p1 *Point, p2 *Point) float64 {
 	squares := Square(p1.X-p2.X) + Square(p1.Y-p2.Y) + Square(p1.Z-p2.Z)
 	return math.Sqrt(float64(squares))
 }
+
+// GCD finds the greatest common divisor via the Euclidean algorithm.
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+
+	return a
+}
+
+// LCM returns the lowest common multiple of the given numbers.
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
+}
+
+// FindLCM returns the lowest common multiple of the slice of integers.
+func FindLCM(integers []int) int {
+	return LCM(integers[0], integers[1], integers[2:]...)
+}

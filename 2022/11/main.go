@@ -12,14 +12,15 @@ import (
 )
 
 const VERBOSE = false
+const LESS_VERBOSE = false
 const NUM_OF_LINES_PER_MONKEY = 6
 const STARTING_ITEMS = "Starting items: "
 const STARTING_ITEMS_DELIMITER = ", "
 const OLD_VALUE = "old"
 const NUM_OF_ROUNDS_PART_1 = 20
-const NUM_OF_ROUNDS_PART_2 = 1000
+const NUM_OF_ROUNDS_PART_2 = 10000
 const RELIEF_DIVISOR_PART_1 = 3
-const RELIEF_DIVISOR_PART_2 = 1
+const RELIEF_DIVISOR_PART_2 = 0
 const NUM_MOST_ACTIVE_MONKEYS = 2
 
 // Operation is an enum that represents the operation.
@@ -69,6 +70,7 @@ type Monkey struct {
 	IfTrue         IfConditionFn
 	IfFalse        IfConditionFn
 	ItemsInspected int
+	DivisibleBy    int
 }
 
 // String returns the string representation of the monkey.
@@ -86,12 +88,19 @@ func (m *Monkey) inspect(item int) int {
 }
 
 // play plays the game for a single monkey.
-func (m *Monkey) play(monkeys []*Monkey, reliefDivisor int) {
+func (m *Monkey) play(monkeys []*Monkey, reliefDivisor int, lcm int) {
 	for _, item := range m.StartingItems {
 		// Monkey inspects the worry level item
 		newWorryLevel := m.inspect(item)
 		// Monkey gets bored
-		adjustedNewWorryLevel := newWorryLevel / reliefDivisor
+		var adjustedNewWorryLevel int
+		if reliefDivisor > 0 {
+			adjustedNewWorryLevel = newWorryLevel / reliefDivisor
+		} else if (newWorryLevel > lcm) {
+			adjustedNewWorryLevel = newWorryLevel % lcm
+		} else {
+			adjustedNewWorryLevel = newWorryLevel
+		}
 		// Monkey tests the worry level item
 		var throwToMonkey int
 		if m.Test(adjustedNewWorryLevel) {
@@ -160,12 +169,12 @@ func getOperation(line string) OperationFn {
 }
 
 // getTest returns the test from a line.
-func getTest(line string) TestFn {
+func getTest(line string) (int, TestFn) {
 	re := regexp.MustCompile(`Test: divisible by (\d+)`)
 	matches := re.FindStringSubmatch(line)
 	divisible, _ := strconv.Atoi(matches[1])
 
-	return func (worryLevel int) bool {
+	return divisible, func (worryLevel int) bool {
 		return worryLevel % divisible == 0
 	}
 }
@@ -201,19 +210,34 @@ func getMostActiveMonkeys(monkeys []*Monkey) []*Monkey {
 	return monkeys[:NUM_MOST_ACTIVE_MONKEYS]
 }
 
+// getMonkeyDivisors returns the divisors of the monkeys.
+func getMonkeyDivisors(monkeys []*Monkey) []int {
+	divisors := make([]int, len(monkeys))
+
+	for i, monkey := range monkeys {
+		divisors[i] = monkey.DivisibleBy
+	}
+
+	return divisors
+}
+
 // playKeepAway plays the game.
-func playKeepAway(monkeys []*Monkey, numOfRounds, reliefDivisor int) {
+func playKeepAway(monkeys []*Monkey, numOfRounds, reliefDivisor int, lcm int) {
 	for i := 0; i < numOfRounds; i++ {
-		if VERBOSE {
+		if VERBOSE || LESS_VERBOSE {
 			fmt.Println("Round", i + 1)
 		}
 
 		for j, monkey := range monkeys {
-			if VERBOSE {
-				fmt.Println("- Monkey", j)
+			if VERBOSE || LESS_VERBOSE {
+				fmt.Print("- Monkey", j)
 			}
 
-			monkey.play(monkeys, reliefDivisor)
+			monkey.play(monkeys, reliefDivisor, lcm)
+
+			if VERBOSE || LESS_VERBOSE {
+				fmt.Println(" inspected items", monkey.ItemsInspected, "times.")
+			}
 		}
 	}
 }
@@ -235,7 +259,7 @@ func getMonkeysFromFile(txtlines []string) []*Monkey {
 		// get the operation
 		operation := getOperation(txtlines[i + 2])
 		// get the test
-		test := getTest(txtlines[i + 3])
+		divisible, test := getTest(txtlines[i + 3])
 		// get the if true
 		ifTrue := getIfCondition(txtlines[i + 4])
 		// get the if false
@@ -248,6 +272,7 @@ func getMonkeysFromFile(txtlines []string) []*Monkey {
 			Test:          test,
 			IfTrue:        ifTrue,
 			IfFalse:       ifFalse,
+			DivisibleBy:   divisible,
 		}
 
 		// add the monkey to the list
@@ -264,13 +289,11 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// process the file
+	// part 1
 	monkeysA := getMonkeysFromFile(txtlines)
+	playKeepAway(monkeysA, NUM_OF_ROUNDS_PART_1, RELIEF_DIVISOR_PART_1, 0)
 
-	// play the game
-	playKeepAway(monkeysA, NUM_OF_ROUNDS_PART_1, RELIEF_DIVISOR_PART_1)
-
-	if VERBOSE {
+	if VERBOSE || LESS_VERBOSE {
 		for i, monkey := range monkeysA {
 			fmt.Println(
 				"Monkey",
@@ -286,11 +309,40 @@ func main() {
 		}
 	}
 
-	// part 1
-	mostActiveMonkeys := getMostActiveMonkeys(monkeysA)
-	monkeyBusiness := calculateMonkeyBusiness(mostActiveMonkeys)
+	mostActiveMonkeysA := getMostActiveMonkeys(monkeysA)
+	monkeyBusinessA := calculateMonkeyBusiness(mostActiveMonkeysA)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
-		monkeyBusiness,
+		monkeyBusinessA,
+	)
+
+	// part 2
+	monkeysB := getMonkeysFromFile(txtlines)
+	// "(...) find another way to keep your worry levels manageable."
+	monkeyDivisors := getMonkeyDivisors(monkeysB)
+	lcm := helpers.FindLCM(monkeyDivisors)
+	playKeepAway(monkeysB, NUM_OF_ROUNDS_PART_2, RELIEF_DIVISOR_PART_2, lcm)
+
+	if VERBOSE || LESS_VERBOSE {
+		for i, monkey := range monkeysB {
+			fmt.Println(
+				"Monkey",
+				i,
+				"has",
+				len(monkey.StartingItems),
+				"items: [",
+				monkey,
+				"], inspected",
+				monkey.ItemsInspected,
+				"times",
+			)
+		}
+	}
+
+	mostActiveMonkeysB := getMostActiveMonkeys(monkeysB)
+	monkeyBusinessB := calculateMonkeyBusiness(mostActiveMonkeysB)
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
+		monkeyBusinessB,
 	)
 }
