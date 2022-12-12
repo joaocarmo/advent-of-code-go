@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const verbose = false
+const VERBOSE = false
 
 type Procedure struct {
 	Move int
@@ -19,22 +17,20 @@ type Procedure struct {
 	To   int
 }
 
-type Stacks map[int][]string
+type Stacks [][]string
 
 // getTopCratesFromStacks returns the top crates from the stacks.
 func getTopCratesFromStacks(stacks Stacks) string {
 	var topCrates string
 
-	keysMap := reflect.ValueOf(stacks).MapKeys()
-	keys := make([]int, len(keysMap))
-	for i, key := range keysMap {
-		keys[i] = key.Interface().(int)
-	}
-	sort.Ints(keys)
+	for _, stack := range stacks {
+		lastIndex := len(stack) - 1
 
-	for _, key := range keys {
-		lastIndex := len(stacks[key]) - 1
-		topCrates += stacks[key][lastIndex]
+		if lastIndex < 0 {
+			continue
+		}
+
+		topCrates += stack[lastIndex]
 	}
 
 	return topCrates
@@ -42,7 +38,7 @@ func getTopCratesFromStacks(stacks Stacks) string {
 
 // arrangeMultipleStacksByProcedure arranges the stacks by a procedure (part 2).
 func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
-	if verbose {
+	if VERBOSE {
 		fmt.Println("==============================================")
 		fmt.Printf(" -> move %d from %d to %d\n", procedure.Move, procedure.From, procedure.To)
 		fmt.Println("==============================================")
@@ -65,7 +61,7 @@ func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks
 	// add the crates to the `to` stack
 	stacks[procedure.To] = append(toStack, cratesToMove...)
 
-	if verbose {
+	if VERBOSE {
 		for key, value := range stacks {
 			fmt.Printf("stack %d: %s\n", key, strings.Join(value, ", "))
 		}
@@ -77,11 +73,8 @@ func arrangeMultipleStacksByProcedure(stacks Stacks, procedure Procedure) Stacks
 // arrangeMultipleStacks arranges the stacks by a slice of procedures (part 2).
 func arrangeMultipleStacks(stacks Stacks, procedures []Procedure) Stacks {
 	// copy the stacks
-	arrangedStacks := make(Stacks)
-
-	for key, value := range stacks {
-		arrangedStacks[key] = value
-	}
+	arrangedStacks := make(Stacks, len(stacks))
+	copy(arrangedStacks, stacks)
 
 	// arrange the stacks
 	for _, procedure := range procedures {
@@ -114,11 +107,8 @@ func arrangeStacksByProcedure(stacks Stacks, procedure Procedure) Stacks {
 // arrangeStacks arranges the stacks by a slice of procedures.
 func arrangeStacks(stacks Stacks, procedures []Procedure) Stacks {
 	// copy the stacks
-	arrangedStacks := make(Stacks)
-
-	for key, value := range stacks {
-		arrangedStacks[key] = value
-	}
+	arrangedStacks := make(Stacks, len(stacks))
+	copy(arrangedStacks, stacks)
 
 	// arrange the stacks
 	for _, procedure := range procedures {
@@ -139,6 +129,9 @@ func parseProcedure(procedure string) Procedure {
 	parsedProcedure.From, _ = strconv.Atoi(matches[2])
 	parsedProcedure.To, _ = strconv.Atoi(matches[3])
 
+	parsedProcedure.From = parsedProcedure.From - 1
+	parsedProcedure.To = parsedProcedure.To - 1
+
 	return parsedProcedure
 }
 
@@ -157,7 +150,7 @@ func parseProcedures(procedures []string) []Procedure {
 // parseStacks parses the stacks into a map of stacks.
 func parseStacks(stacks []string) Stacks {
 	// create map of stacks using numbers as keys
-	stacksMap := make(Stacks)
+	stacksMap := make(Stacks, len(stacks))
 
 	// copy the stacks
 	var parsedStacks []string
@@ -171,6 +164,7 @@ func parseStacks(stacks []string) Stacks {
 	// parse the stacks matrix
 	for i, value := range parsedStacks[0] {
 		stackNumber, err := strconv.Atoi(string(value))
+		stackIndex := stackNumber - 1
 
 		if err == nil {
 			for _, stackString := range parsedStacks[1:] {
@@ -181,7 +175,7 @@ func parseStacks(stacks []string) Stacks {
 				crate := strings.TrimSpace(string(stackString[i]))
 
 				if crate != "" {
-					stacksMap[stackNumber] = append(stacksMap[stackNumber], string(stackString[i]))
+					stacksMap[stackIndex] = append(stacksMap[stackIndex], string(stackString[i]))
 				}
 			}
 		}
