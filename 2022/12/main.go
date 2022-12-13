@@ -563,4 +563,4 @@ func main() {
 		shortestRoute := helpers.MinOf(routeLengths...)
 		fmt.Println(shortestRoute)
 	}
-	}
+}
