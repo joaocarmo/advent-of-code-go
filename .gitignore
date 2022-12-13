@@ -19,3 +19,8 @@
 
 # Temporary files
 tmp.txt
+
+# Other languages
+*.js
+*.py
+*.ts
