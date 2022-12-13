@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
@@ -12,6 +14,7 @@ const START = "S"
 const END = "E"
 const EDGE_LENGTH = 1
 const INFINITY = 999999
+const POINT_DELIMITER = ","
 
 // Move represents a move in the map.
 type Move int
@@ -150,6 +153,18 @@ func newMapheight(lines []string) *Mapheight {
 	return m
 }
 
+// sclear clears the map.
+func (m *Mapheight) clear() {
+	m.grid = nil
+	m.points = nil
+	m.visited = nil
+	m.unvisited = nil
+	m.start = nil
+	m.end = nil
+	m.current = nil
+	m.testFn = nil
+}
+
 // setHeight sets the height of the given position.
 func (m *Mapheight) setHeight(x, y int, h Heights) {
 	m.grid[y][x] = h
@@ -260,7 +275,7 @@ func (m *Mapheight) markVisited(x, y int) {
 	}
 
 	if VERBOSE {
-		fmt.Printf("Marked (%d, %d) as visited\n", x, y)
+		fmt.Printf("Marked (%d%s%d) as visited\n", x, POINT_DELIMITER, y)
 	}
 }
 
@@ -400,7 +415,7 @@ func (m *Mapheight) findPathRoute() {
 				m.route = append(m.route, neighbour)
 
 				if VERBOSE {
-					fmt.Printf("Added (%d, %d) to the route\n", neighbour.x, neighbour.y)
+					fmt.Printf("Added (%d%s%d) to the route\n", neighbour.x, POINT_DELIMITER, neighbour.y)
 				}
 
 				break
@@ -424,6 +439,23 @@ func (m *Mapheight) findPath() {
 	m.testFn = canGoDown
 
 	m.findPathRoute()
+}
+
+// getPossibleStartingPoints returns the possible starting points.
+func (m *Mapheight) getPossibleStartingPoints() []*Point {
+	startingPoints := make([]*Point, 0)
+
+	for y := 0; y < len(m.points); y++ {
+		for x := 0; x < len(m.points[y]); x++ {
+			point := m.getPoint(x, y)
+
+			if m.getHeight(point.x, point.y) == a {
+				startingPoints = append(startingPoints, point)
+			}
+		}
+	}
+
+	return startingPoints
 }
 
 // addGrid adds a grid to the map.
@@ -469,18 +501,66 @@ func (m *Mapheight) String() string {
 	return result
 }
 
+// getMapheightsForStartingPoints returns the mapheights for the starting points.
+func getMapheightsForStartingPoints(lines []string, startingPoints []*Point) []int {
+	numPoints := len(startingPoints)
+	routeLengths := make([]int, numPoints)
+
+	for i, startingPoint := range startingPoints {
+		mapheight := newMapheight(lines)
+		point := mapheight.getPoint(startingPoint.x, startingPoint.y)
+		mapheight.start = point
+
+		mapheight.findPath()
+		mapheight.clear()
+
+		routeLengths[i] = len(mapheight.route)
+	}
+
+	return routeLengths
+}
+
 // main is the entry point for the application.
 func main() {
 	// read the file
 	args := helpers.ReadArguments()
 	filename := args[0]
+	var startingPoint string
+	if len(args) > 1 {
+		startingPoint = args[1]
+	}
 	txtlines := helpers.ReadFile(filename)
 
 	// part 1
 	mapheight := newMapheight(txtlines)
 	mapheight.findPath()
-	fmt.Printf(
-		"[Part One] The answer is: %d\n",
-		len(mapheight.route),
-	)
-}
+	if startingPoint == "" {
+		fmt.Printf(
+			"[Part One] The answer is: %d\n",
+			len(mapheight.route),
+		)
+		fmt.Println("[Part Two] The answer can be obtained with the following command:")
+		fmt.Printf("\n\tgo run . %s all\n\n", filename)
+	}
+
+	// part 2
+	var possibleStartingPoints []*Point
+	if startingPoint == "all" {
+		possibleStartingPoints = mapheight.getPossibleStartingPoints()
+		startingPoints := make([]string, len(possibleStartingPoints))
+		for i, point := range possibleStartingPoints {
+			startingPoints[i] = fmt.Sprintf("%d%s%d", point.x, POINT_DELIMITER, point.y)
+		}
+		fmt.Print(strings.Join(startingPoints, "\n"))
+	} else if startingPoint != "" {
+		// split and parse the starting point
+		xy := strings.Split(startingPoint, POINT_DELIMITER)
+		x, _ := strconv.Atoi(xy[0])
+		y, _ := strconv.Atoi(xy[1])
+		point := mapheight.getPoint(x, y)
+		possibleStartingPoints = []*Point{point}
+		routeLengths := getMapheightsForStartingPoints(txtlines, possibleStartingPoints)
+		shortestRoute := helpers.MinOf(routeLengths...)
+		fmt.Println(shortestRoute)
+	}
+	}
