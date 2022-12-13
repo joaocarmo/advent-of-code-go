@@ -42,7 +42,9 @@ echo ""
 # For each line in the points input file, execute the script to get the steps.
 echo "Executing the script to get the steps..."
 while read -r LINE || [ -n "$LINE" ]; do
-    execute_cmd "${LINE}" 2>/dev/null | tee -a "${TMP_FILE_STEPS}"
+  # The reasoning for ignoring the stderr is that a starting point which causes
+  # the script to fail is probably not an optimal starting point.
+  execute_cmd "${LINE}" 2>/dev/null | tee -a "${TMP_FILE_STEPS}"
 done < "${TMP_FILE_POINTS}"
 
 # Sort the steps file and get the first line.
