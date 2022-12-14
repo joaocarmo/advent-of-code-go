@@ -181,6 +181,7 @@ func getIndicesInRightOrder(pairs []*Pair) []int {
 	return indices
 }
 
+// sortPairsByRightOrder sorts the pairs by the right order.
 func sortPairsByRightOrder(packets []interface{}) []interface{} {
 	sort.SliceStable(packets, func(i, j int) bool {
 		result, _ := comparePackets(packets[i], packets[j])
@@ -190,6 +191,7 @@ func sortPairsByRightOrder(packets []interface{}) []interface{} {
 	return packets
 }
 
+// findDividerIndices finds the indices of the dividers.
 func findDividerIndices(packets, dividers []interface{}) []int {
 	indices := []int{}
 
