@@ -95,3 +95,14 @@ func LCM(a, b int, integers ...int) int {
 func FindLCM(integers []int) int {
 	return LCM(integers[0], integers[1], integers[2:]...)
 }
+
+// SumInts returns the sum of the given integers.
+func SumInts(ints ...int) int {
+	sum := 0
+
+	for _, i := range ints {
+		sum += i
+	}
+
+	return sum
+}
