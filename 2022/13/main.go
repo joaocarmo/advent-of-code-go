@@ -3,12 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
+	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
 const VERVOSE = false
 const ERR_UNDETERMINED = "Undetermined"
+const EXTRA_LINES = "[[2]]\n[[6]]\n"
+const NEW_LINE = "\n"
 
 // Pair is a pair of packets.
 type Pair struct {
@@ -139,6 +144,22 @@ func getPairsFromFile(txtlines []string) []*Pair {
 	return pairs
 }
 
+// getPacketsFromFile gets all packets from a file.
+func getPacketsFromFile(txtlines []string) []interface{} {
+	packets := []interface{}{}
+
+	for _, line := range txtlines {
+		if line == "" {
+			continue
+		}
+
+		packet := parsePacketFromLine(line)
+		packets = append(packets, packet)
+	}
+
+	return packets
+}
+
 // getIndicesInRightOrder gets the indices of the pairs in the right order.
 func getIndicesInRightOrder(pairs []*Pair) []int {
 	indices := []int{}
@@ -154,6 +175,30 @@ func getIndicesInRightOrder(pairs []*Pair) []int {
 
 		if pair.AreInOrder {
 			indices = append(indices, index)
+		}
+	}
+
+	return indices
+}
+
+func sortPairsByRightOrder(packets []interface{}) []interface{} {
+	sort.SliceStable(packets, func(i, j int) bool {
+		result, _ := comparePackets(packets[i], packets[j])
+		return result
+	})
+
+	return packets
+}
+
+func findDividerIndices(packets, dividers []interface{}) []int {
+	indices := []int{}
+
+	for i, packet := range packets {
+		index := i + 1
+		for _, divider := range dividers {
+			if reflect.DeepEqual(packet, divider) {
+				indices = append(indices, index)
+			}
 		}
 	}
 
@@ -176,4 +221,20 @@ func main() {
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
 		sumOfIndicesInRightOrder,
-	)}
+	)
+
+	// process the file again
+	extraLines := strings.Split(EXTRA_LINES, NEW_LINE)
+	fullTxtlines := append(txtlines, extraLines...)
+
+	// part 2
+	packets := getPacketsFromFile(fullTxtlines)
+	packetsInRightOrder := sortPairsByRightOrder(packets)
+	dividers := getPacketsFromFile(extraLines)
+	dividerIndices := findDividerIndices(packetsInRightOrder, dividers)
+	decoderKey := helpers.MultiplyInts(dividerIndices...)
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		decoderKey,
+	)
+}

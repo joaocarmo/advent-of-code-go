@@ -106,3 +106,14 @@ func SumInts(ints ...int) int {
 
 	return sum
 }
+
+// MultiplyInts returns the product of the given integers.
+func MultiplyInts(ints ...int) int {
+	product := 1
+
+	for _, i := range ints {
+		product *= i
+	}
+
+	return product
+}
