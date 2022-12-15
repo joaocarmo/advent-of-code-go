@@ -9,7 +9,7 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const VERBOSE = false
+const VERBOSE = true
 const INFINITY = int(^uint(0) >> 1)
 const POINT_DELIMITER = ","
 
@@ -62,6 +62,7 @@ type Cave struct {
 	grid                   [][]*Point
 	xMin, xMax, yMin, yMax int
 	sandSource             *Point
+	numFallenSand          int
 }
 
 func (c *Cave) isAbyss(x, y int) bool {
@@ -126,36 +127,62 @@ func (c *Cave) fillWithAir() {
 	}
 }
 
-func (c *Cave) fillWithSandFromPoint(xStart, yStart int) {
-	if c.isAbyss(xStart, yStart) {
-		return
-	}
-
-	x := xStart
-	for y := yStart; y <= c.yMax; y++ {
+func (c *Cave) fillWithSandFromPoint(startPoint *Point) bool {
+	x := startPoint.x
+	for y := startPoint.y; y <= c.yMax; y++ {
 		point := c.getPoint(x, y)
+		fmt.Println("point", point)
+
+		if point == nil {
+			return false
+		}
 
 		// We reached rock or sand
 		if point.shouldStop() {
 			// Attempt to move one step down and to the left
-			nextPoint := c.getPoint(x-1, y+1)
+			nextPoint := c.getPoint(x-1, y)
 
-			if nextPoint == nil || nextPoint.shouldStop() {
-				// Attempt to move one step down and to the right
-				nextPoint = c.getPoint(x+1, y+1)
-
-				if nextPoint == nil || nextPoint.shouldStop() {
-					// Sand comes to a rest in the previous point
-					point = c.getPoint(x, y-1)
-					point.element = Sand
-				}
+			if nextPoint == nil {
+				return false
 			}
+
+			if nextPoint.shouldStop() {
+				// Attempt to move one step down and to the right
+				nextPoint = c.getPoint(x+1, y)
+
+				if nextPoint == nil {
+					return false
+				}
+
+				if nextPoint.shouldStop() {
+					// Sand comes to a rest in the previous point
+					previousPoint := c.getPoint(x, y-1)
+					previousPoint.element = Sand
+					c.numFallenSand++
+					return true
+				}
+
+				return c.fillWithSandFromPoint(nextPoint)
+			}
+
+			return c.fillWithSandFromPoint(nextPoint)
 		}
 	}
+
+	return false
 }
 
 func (c *Cave) fillWithSand() {
-	c.fillWithSandFromPoint(c.sandSource.x, c.sandSource.y)
+	notReachedAbyss := c.fillWithSandFromPoint(c.sandSource)
+
+	for notReachedAbyss {
+		notReachedAbyss = c.fillWithSandFromPoint(c.sandSource)
+
+		if VERBOSE {
+			fmt.Println(c.numFallenSand)
+			fmt.Println(c)
+		}
+	}
 }
 
 func (c *Cave) String() string {
@@ -277,5 +304,4 @@ func main() {
 	}
 	cave.addSandSource(sandSource)
 	cave.fillWithSand()
-	fmt.Println(cave)
 }
