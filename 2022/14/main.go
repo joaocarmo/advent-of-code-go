@@ -9,10 +9,11 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const VERBOSE = true
+const VERBOSE = false
 const INFINITY = int(^uint(0) >> 1)
 const POINT_DELIMITER = ","
 
+// Element is the type of the element in the cave.
 type Element int
 
 const (
@@ -22,15 +23,18 @@ const (
 	SandSource
 )
 
+// String returns the string representation of the element.
 func (e Element) String() string {
 	return [...]string{"Rock", "Air", "Sand", "SandSource"}[e]
 }
 
+// Point is a point in the cave.
 type Point struct {
 	x, y    int
 	element Element
 }
 
+// shouldStop returns true if the point should stop the sand.
 func (p *Point) shouldStop() bool {
 	if p.element == Rock {
 		return true
@@ -43,6 +47,7 @@ func (p *Point) shouldStop() bool {
 	return false
 }
 
+// String returns the string representation of the point.
 func (p *Point) String() string {
 	switch p.element {
 	case Rock:
@@ -58,6 +63,7 @@ func (p *Point) String() string {
 	}
 }
 
+// Cave is the cave.
 type Cave struct {
 	grid                   [][]*Point
 	xMin, xMax, yMin, yMax int
@@ -65,10 +71,12 @@ type Cave struct {
 	numFallenSand          int
 }
 
+// isAbyss returns true if the point is an abyss.
 func (c *Cave) isAbyss(x, y int) bool {
 	return y > c.yMax
 }
 
+// exists returns true if the point exists.
 func (c *Cave) exists(x, y int) bool {
 	if x < c.xMin || x > c.xMax || y < c.yMin || y > c.yMax {
 		return true
@@ -77,6 +85,7 @@ func (c *Cave) exists(x, y int) bool {
 	return false
 }
 
+// getPoint returns the point at the given coordinates.
 func (c *Cave) getPoint(x, y int) *Point {
 	if c.exists(x, y) {
 		return nil
@@ -85,26 +94,29 @@ func (c *Cave) getPoint(x, y int) *Point {
 	return c.grid[y-c.yMin][x-c.xMin]
 }
 
+// addPoint adds a point to the cave.
 func (c *Cave) addPoint(point *Point) {
 	x := point.x - c.xMin
 	y := point.y - c.yMin
 	c.grid[y][x] = point
 }
 
+// addSandSource adds a sand source to the cave.
 func (c *Cave) addSandSource(point *Point) {
 	c.addPoint(point)
 	c.sandSource = point
 }
 
+// addRock adds a rock to the cave.
 func (c *Cave) addRockPath(rockPath []*Point) {
 	for i := 0; i < len(rockPath)-1; i++ {
 		firstPoint := rockPath[i]
 		secondPoint := rockPath[i+1]
 
-		for x := secondPoint.x; x <= firstPoint.x; x++ {
+		for x := firstPoint.x; x <= secondPoint.x; x++ {
 			c.addPoint(&Point{
 				x:       x,
-				y:       secondPoint.y,
+				y:       firstPoint.y,
 				element: Rock,
 			})
 		}
@@ -116,9 +128,26 @@ func (c *Cave) addRockPath(rockPath []*Point) {
 				element: Rock,
 			})
 		}
+
+		for x := secondPoint.x; x <= firstPoint.x; x++ {
+			c.addPoint(&Point{
+				x:       x,
+				y:       secondPoint.y,
+				element: Rock,
+			})
+		}
+
+		for y := secondPoint.y; y <= firstPoint.y; y++ {
+			c.addPoint(&Point{
+				x:       secondPoint.x,
+				y:       y,
+				element: Rock,
+			})
+		}
 	}
 }
 
+// fillWithAir fills the cave with air.
 func (c *Cave) fillWithAir() {
 	for y := c.yMin; y <= c.yMax; y++ {
 		for x := c.xMin; x <= c.xMax; x++ {
@@ -131,20 +160,22 @@ func (c *Cave) fillWithAir() {
 	}
 }
 
+// shouldStopAtPoint returns true if the sand should stop at the given point.
 func (c *Cave) shouldStopAtPoint(x, y int) (bool, bool) {
 	point := c.getPoint(x, y)
 
-	if point == nil {
+	if c.isAbyss(x, y) {
 		return true, false
 	}
 
-	if point != nil && !point.shouldStop() {
+	if point == nil || !point.shouldStop() {
 		return false, true
 	}
 
 	return false, false
 }
 
+// fillWithSandFromPoint fills the cave with sand from the given point.
 func (c *Cave) fillWithSandFromPoint(startPoint *Point) bool {
 	x := startPoint.x
 	for y := startPoint.y; y <= c.yMax; y++ {
@@ -187,6 +218,7 @@ func (c *Cave) fillWithSandFromPoint(startPoint *Point) bool {
 	return false
 }
 
+// fillWithSand fills the cave with sand.
 func (c *Cave) fillWithSand() {
 	do := c.fillWithSandFromPoint(c.sandSource)
 
@@ -200,6 +232,7 @@ func (c *Cave) fillWithSand() {
 	}
 }
 
+// String returns the string representation of the cave.
 func (c *Cave) String() string {
 	str := ""
 	for _, row := range c.grid {
@@ -215,6 +248,7 @@ func (c *Cave) String() string {
 	return str
 }
 
+// newCave creates a new cave.
 func newCave(xMin, xMax, yMin, yMax int) *Cave {
 	c := Cave{
 		xMin: xMin,
@@ -234,6 +268,7 @@ func newCave(xMin, xMax, yMin, yMax int) *Cave {
 	return &c
 }
 
+// getRockPath returns the rock path.
 func getRockPath(rockPathPoints [][]string) [][]*Point {
 	rockPath := make([][]*Point, len(rockPathPoints))
 
@@ -255,6 +290,7 @@ func getRockPath(rockPathPoints [][]string) [][]*Point {
 	return rockPath
 }
 
+// getMinMaxCoords returns the min and max coordinates of the rock path.
 func getMinMaxCoords(rockPathPoints [][]*Point) (int, int, int, int) {
 	xMin := INFINITY
 	xMax := 0
@@ -284,6 +320,7 @@ func getMinMaxCoords(rockPathPoints [][]*Point) (int, int, int, int) {
 	return xMin, xMax, yMin, yMax
 }
 
+// getPointsFromFile returns the points from the file.
 func getPointsFromFile(txtlines []string) [][]string {
 	points := make([][]string, len(txtlines))
 
@@ -319,4 +356,8 @@ func main() {
 	}
 	cave.addSandSource(sandSource)
 	cave.fillWithSand()
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		cave.numFallenSand,
+	)
 }
