@@ -12,6 +12,8 @@ import (
 const VERBOSE = false
 const INFINITY = int(^uint(0) >> 1)
 const POINT_DELIMITER = ","
+const FLOOR_LEVEL = 2
+const FLOOR_INFINITY = 9999
 
 // Element is the type of the element in the cave.
 type Element int
@@ -44,6 +46,10 @@ func (p *Point) shouldStop() bool {
 		return true
 	}
 
+	if p.element == SandSource {
+		return true
+	}
+
 	return false
 }
 
@@ -69,6 +75,11 @@ type Cave struct {
 	xMin, xMax, yMin, yMax int
 	sandSource             *Point
 	numFallenSand          int
+}
+
+// isSandSource returns true if the point is a sand source.
+func (c *Cave) isSandSouce(point *Point) bool {
+	return point.element == SandSource
 }
 
 // isAbyss returns true if the point is an abyss.
@@ -210,8 +221,12 @@ func (c *Cave) fillWithSandFromPoint(startPoint *Point) bool {
 
 		// Stop falling
 		currentPoint := c.getPoint(x-1, y-1)
-		currentPoint.element = Sand
 		c.numFallenSand++
+		if c.isSandSouce(currentPoint) {
+			currentPoint.element = Sand
+			return false
+		}
+		currentPoint.element = Sand
 		return true
 	}
 
@@ -220,10 +235,13 @@ func (c *Cave) fillWithSandFromPoint(startPoint *Point) bool {
 
 // fillWithSand fills the cave with sand.
 func (c *Cave) fillWithSand() {
-	do := c.fillWithSandFromPoint(c.sandSource)
+	x := c.sandSource.x
+	y := c.sandSource.y + 1
+	startPoint := c.getPoint(x, y)
+	do := c.fillWithSandFromPoint(startPoint)
 
 	for do {
-		do = c.fillWithSandFromPoint(c.sandSource)
+		do = c.fillWithSandFromPoint(startPoint)
 
 		if VERBOSE {
 			fmt.Println(c.numFallenSand)
@@ -340,12 +358,14 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// part 1
+	// create the sand source
 	sandSource := &Point{
 		x:       500,
 		y:       0,
 		element: SandSource,
 	}
+
+	// part 1
 	rockPathPoints := getPointsFromFile(txtlines)
 	rockPaths := getRockPath(rockPathPoints)
 	rockPathsWithSandSource := append(rockPaths, []*Point{sandSource})
@@ -358,6 +378,38 @@ func main() {
 	cave.fillWithSand()
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
+		cave.numFallenSand,
+	)
+
+	// part 2
+	rockPathPoints = getPointsFromFile(txtlines)
+	rockPaths = getRockPath(rockPathPoints)
+	rockPathsWithSandSource = append(rockPaths, []*Point{sandSource})
+	xMin, xMax, yMin, yMax = getMinMaxCoords(rockPathsWithSandSource)
+	xMin -= FLOOR_INFINITY
+	xMax += FLOOR_INFINITY
+	yMax += FLOOR_LEVEL
+	floor := []*Point{
+		&Point{
+			x:       xMin,
+			y:       yMax,
+			element: Rock,
+		},
+		&Point{
+			x:       xMax,
+			y:       yMax,
+			element: Rock,
+		},
+	}
+	cave = newCave(xMin, xMax, yMin, yMax)
+	for _, rockPath := range rockPaths {
+		cave.addRockPath(rockPath)
+	}
+	cave.addRockPath(floor)
+	cave.addSandSource(sandSource)
+	cave.fillWithSand()
+	fmt.Printf(
+		"[Part Two] The answer is: %d\n",
 		cave.numFallenSand,
 	)
 }
