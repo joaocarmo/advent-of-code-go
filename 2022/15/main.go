@@ -9,13 +9,15 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const VERBOSE = true
+const VERBOSE = false
 const INFINITY = int(^uint(0) >> 1)
 const POINT_DELIMITER = ", "
 const X_DELIMITER = "x="
 const Y_DELIMITER = "y="
-const CAVE_OFFSET = 12
+const CAVE_OFFSET = 4000000
+const COVERAGE_AT = 2000000
 
+// Element represents the type of a point in the cave.
 type Element int
 
 const (
@@ -25,34 +27,56 @@ const (
 	Covered
 )
 
+// String returns the string representation of an element.
 func (e Element) String() string {
 	return [...]string{"Beacon", "Covered", "Sensor"}[e]
 }
 
+// Point represents a point in the cave.
 type Point struct {
-	x, y    int
-	closest *Point
-	element Element
+	x, y     int
+	closest  *Point
+	element  Element
+	maxRange int
 }
 
+// isBeacon returns true if the point is a beacon.
+func (p *Point) isBeacon() bool {
+	return p.element == Beacon
+}
+
+// isSensor returns true if the point is a sensor.
 func (p *Point) isSensor() bool {
 	return p.element == Sensor
 }
 
+// isCovered returns true if the point is covered by a sensor.
 func (p *Point) isCovered() bool {
 	return p.element == Covered
+}
+
+// isValid returns true if the point is valid.
+func (p *Point) isValid() bool {
+	return !p.isBeacon() && !p.isSensor()
 }
 
 // findRange returns the range of the point by calculating the maximum
 // distance between the point and its closest point.
 func (p *Point) findMaxRange() int {
+	if p.maxRange > 0 {
+		return p.maxRange
+	}
+
 	if p.closest == nil {
 		return -1
 	}
 
-	return helpers.AbsDiffInt(p.x, p.closest.x) + helpers.AbsDiffInt(p.y, p.closest.y)
+	p.maxRange = helpers.AbsDiffInt(p.x, p.closest.x) + helpers.AbsDiffInt(p.y, p.closest.y)
+
+	return p.maxRange
 }
 
+// withinRange returns true if the point is within range of the sensor.
 func (p *Point) withinRange(sensor *Point) bool {
 	maxRange := sensor.findMaxRange()
 	distance := helpers.AbsDiffInt(p.x, sensor.x) + helpers.AbsDiffInt(p.y, sensor.y)
@@ -60,12 +84,13 @@ func (p *Point) withinRange(sensor *Point) bool {
 	return distance <= maxRange
 }
 
+// cover covers the point with a sensor.
 func (p *Point) cover(sensor *Point) {
-	if p.element == Beacon {
+	if p.isBeacon() {
 		return
 	}
 
-	if p.element == Sensor {
+	if p.isSensor() {
 		return
 	}
 
@@ -74,6 +99,7 @@ func (p *Point) cover(sensor *Point) {
 	}
 }
 
+// String returns the string representation of a point.
 func (p *Point) String() string {
 	switch p.element {
 	case Air:
@@ -89,12 +115,14 @@ func (p *Point) String() string {
 	}
 }
 
+// Cave represents the cave.
 type Cave struct {
 	grid                   map[int]map[int]*Point
 	xMin, xMax, yMin, yMax int
 	sensors				   []*Point
 }
 
+// exists returns true if the point exists in the cave.
 func (c *Cave) exists(x, y int) bool {
 	if _, ok := c.grid[y-c.yMin]; !ok {
 		return false
@@ -107,6 +135,7 @@ func (c *Cave) exists(x, y int) bool {
 	return true
 }
 
+// getPoint returns the point at the given coordinates.
 func (c *Cave) getPoint(x, y int) *Point {
 	if c.exists(x, y) {
 		return c.grid[y-c.yMin][x-c.xMin]
@@ -119,6 +148,7 @@ func (c *Cave) getPoint(x, y int) *Point {
 	}
 }
 
+// addPoint adds a point to the cave.
 func (c *Cave) addPoint(point *Point) {
 	x := point.x - c.xMin
 	y := point.y - c.yMin
@@ -134,6 +164,27 @@ func (c *Cave) addPoint(point *Point) {
 	}
 }
 
+// getSensorCoverageAt returns the number of points covered by a sensor at the given y coordinate.
+func (c *Cave) getSensorCoverageAt(y int) int {
+	coverage := 0
+
+	for x := c.xMin; x <= c.xMax; x++ {
+		point := c.getPoint(x, y)
+
+		for _, sensor := range c.sensors {
+			if point.withinRange(sensor) {
+				if point.isValid() {
+					coverage++
+				}
+				break
+			}
+		}
+	}
+
+	return coverage
+}
+
+// cover covers the cave with a sensor.
 func (c *Cave) cover(sensor *Point) {
 	sensorRange := sensor.findMaxRange()
 	xMin := helpers.MaxOf(sensor.x-sensorRange, c.xMin)
@@ -144,14 +195,13 @@ func (c *Cave) cover(sensor *Point) {
 	for x := xMin; x <= xMax; x++ {
 		for y := yMin; y <= yMax; y++ {
 			point := c.getPoint(x, y)
-
 			point.cover(sensor)
-
 			c.addPoint(point)
 		}
 	}
 }
 
+// getCoverageAt returns the number of points covered at the given y coordinate.
 func (c *Cave) getCoverageAt(y int) int {
 	coverage := 0
 
@@ -166,12 +216,14 @@ func (c *Cave) getCoverageAt(y int) int {
 	return coverage
 }
 
+// findCoverage finds the coverage of the cave.
 func (c *Cave) findCoverage() {
 	for _, sensor := range c.sensors {
 		c.cover(sensor)
 	}
 }
 
+// String returns the string representation of the cave.
 func (c *Cave) String() string {
 	str := ""
 	for y := c.yMin; y <= c.yMax; y++ {
@@ -191,6 +243,7 @@ func (c *Cave) String() string {
 	return str
 }
 
+// newCave returns a new cave.
 func newCave(xMin, xMax, yMin, yMax int) *Cave {
 	c := Cave{
 		xMin: xMin,
@@ -204,6 +257,7 @@ func newCave(xMin, xMax, yMin, yMax int) *Cave {
 	return &c
 }
 
+// getSensorAndBeaconFromLine returns the sensor and beacon from the given line.
 func getSensorAndBeaconFromLine(line string) (*Point, *Point) {
 	sensor := &Point{}
 	beacon := &Point{}
@@ -230,6 +284,7 @@ func getSensorAndBeaconFromLine(line string) (*Point, *Point) {
 	return sensor, beacon
 }
 
+// getMinMaxCoords returns the min and max x and y coordinates.
 func getMinMaxCoords(points []*Point) (int, int, int, int) {
 	xMin := INFINITY
 	xMax := 0
@@ -257,6 +312,7 @@ func getMinMaxCoords(points []*Point) (int, int, int, int) {
 	return xMin, xMax, yMin, yMax
 }
 
+// getPointsFromFile returns the points from the given lines.
 func getPointsFromFile(lines []string) []*Point {
 	points := []*Point{}
 
@@ -277,6 +333,10 @@ func main() {
 	txtlines := helpers.ReadFile(filename)
 
 	// print the text lines
+	coverageAt := COVERAGE_AT
+	if len(args) > 1 {
+		coverageAt, _ = strconv.Atoi(args[1])
+	}
 	points := getPointsFromFile(txtlines)
 	xMin, xMax, yMin, yMax := getMinMaxCoords(points)
 	cave := newCave(
@@ -288,8 +348,16 @@ func main() {
 	for _, point := range points {
 		cave.addPoint(point)
 	}
-	cave.findCoverage()
-	fmt.Println(cave)
-	numBeaconCannotBePresent := cave.getCoverageAt(10)
-	fmt.Println(numBeaconCannotBePresent)
+	if VERBOSE {
+		cave.findCoverage()
+		fmt.Println(cave)
+		numBeaconCannotBePresent := cave.getCoverageAt(coverageAt)
+		fmt.Println(numBeaconCannotBePresent)
+	} else {
+		numBeaconNotPresent := cave.getSensorCoverageAt(coverageAt)
+		fmt.Printf(
+			"[Part One] The answer is: %d\n",
+			numBeaconNotPresent,
+		)
+	}
 }
