@@ -90,30 +90,42 @@ func (p *Point) String() string {
 }
 
 type Cave struct {
-	grid                   [][]*Point
+	grid                   map[int]map[int]*Point
 	xMin, xMax, yMin, yMax int
 	sensors				   []*Point
 }
 
 func (c *Cave) exists(x, y int) bool {
-	if x < c.xMin || x > c.xMax || y < c.yMin || y > c.yMax {
-		return true
+	if _, ok := c.grid[y-c.yMin]; !ok {
+		return false
 	}
 
-	return false
+	if _, ok := c.grid[y-c.yMin][x-c.xMin]; !ok {
+		return false
+	}
+
+	return true
 }
 
 func (c *Cave) getPoint(x, y int) *Point {
 	if c.exists(x, y) {
-		return nil
+		return c.grid[y-c.yMin][x-c.xMin]
 	}
 
-	return c.grid[y-c.yMin][x-c.xMin]
+	return &Point{
+		x: x,
+		y: y,
+		element: Air,
+	}
 }
 
 func (c *Cave) addPoint(point *Point) {
 	x := point.x - c.xMin
 	y := point.y - c.yMin
+
+	if _, ok := c.grid[y]; !ok {
+		c.grid[y] = make(map[int]*Point)
+	}
 
 	c.grid[y][x] = point
 
@@ -134,6 +146,8 @@ func (c *Cave) cover(sensor *Point) {
 			point := c.getPoint(x, y)
 
 			point.cover(sensor)
+
+			c.addPoint(point)
 		}
 	}
 }
@@ -158,27 +172,14 @@ func (c *Cave) findCoverage() {
 	}
 }
 
-func (c *Cave) fillWithAir() {
-	for y := c.yMin; y <= c.yMax; y++ {
-		for x := c.xMin; x <= c.xMax; x++ {
-			c.addPoint(&Point{
-				x:       x,
-				y:       y,
-				element: Air,
-			})
-		}
-	}
-}
-
 func (c *Cave) String() string {
 	str := ""
-	for i, row := range c.grid {
-
+	for y := c.yMin; y <= c.yMax; y++ {
 		if VERBOSE {
-			str += fmt.Sprintf("%d\t", c.yMin + i)
+			str += fmt.Sprintf("%d\t", c.yMin + y)
 		}
-
-		for _, point := range row {
+		for x := c.xMin; x <= c.xMax; x++ {
+			point := c.getPoint(x, y)
 			if point == nil {
 				str += " "
 				continue
@@ -198,13 +199,7 @@ func newCave(xMin, xMax, yMin, yMax int) *Cave {
 		yMax: yMax,
 	}
 
-	c.grid = make([][]*Point, c.yMax-c.yMin+1)
-
-	for i := range c.grid {
-		c.grid[i] = make([]*Point, c.xMax-c.xMin+1)
-	}
-
-	c.fillWithAir()
+	c.grid = make(map[int]map[int]*Point)
 
 	return &c
 }
