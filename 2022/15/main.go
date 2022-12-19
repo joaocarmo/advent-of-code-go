@@ -3,19 +3,22 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const VERBOSE = false
+const VERBOSE = true
 const INFINITY = int(^uint(0) >> 1)
 const POINT_DELIMITER = ", "
 const X_DELIMITER = "x="
 const Y_DELIMITER = "y="
-const CAVE_OFFSET = 4000000
 const COVERAGE_AT = 2000000
+const MIN_COORDINATE = 0
+const MAX_COORDINATE = 20
+const TUNNING_FREQUENCY = 4000000
 
 // Element represents the type of a point in the cave.
 type Element int
@@ -40,6 +43,20 @@ type Point struct {
 	maxRange int
 }
 
+// calculateTuningFrequency returns the tuning frequency of the point.
+func (p *Point) calculateTuningFrequency() int {
+	if p == nil {
+		return 0
+	}
+
+	return p.x * TUNNING_FREQUENCY + p.y
+}
+
+// isAir returns true if the point is air.
+func (p *Point) isAir() bool {
+	return p.element == Air
+}
+
 // isBeacon returns true if the point is a beacon.
 func (p *Point) isBeacon() bool {
 	return p.element == Beacon
@@ -55,8 +72,8 @@ func (p *Point) isCovered() bool {
 	return p.element == Covered
 }
 
-// isValid returns true if the point is valid.
-func (p *Point) isValid() bool {
+// isInvalid returns true if the point is valid.
+func (p *Point) isInvalid() bool {
 	return !p.isBeacon() && !p.isSensor()
 }
 
@@ -120,6 +137,7 @@ type Cave struct {
 	grid                   map[int]map[int]*Point
 	xMin, xMax, yMin, yMax int
 	sensors				   []*Point
+	offset				   int
 }
 
 // exists returns true if the point exists in the cave.
@@ -164,16 +182,23 @@ func (c *Cave) addPoint(point *Point) {
 	}
 }
 
-// getSensorCoverageAt returns the number of points covered by a sensor at the given y coordinate.
-func (c *Cave) getSensorCoverageAt(y int) int {
+// getSensorCoverageAtY returns the number of points covered by a sensor at the given y coordinate.
+func (c *Cave) getSensorCoverageAtY(y int, bounds ...int) int {
 	coverage := 0
+	xMin := c.xMin
+	xMax := c.xMax
 
-	for x := c.xMin; x <= c.xMax; x++ {
+	if len(bounds) > 0 {
+		xMin = bounds[0]
+		xMax = bounds[1]
+	}
+
+	for x := xMin; x <= xMax; x++ {
 		point := c.getPoint(x, y)
 
 		for _, sensor := range c.sensors {
 			if point.withinRange(sensor) {
-				if point.isValid() {
+				if point.isInvalid() {
 					coverage++
 				}
 				break
@@ -182,6 +207,75 @@ func (c *Cave) getSensorCoverageAt(y int) int {
 	}
 
 	return coverage
+}
+
+// getSensorCoverageAtX returns the number of points covered by a sensor at the given y coordinate.
+func (c *Cave) getSensorCoverageAtX(x int, bounds ...int) int {
+	coverage := 0
+	yMin := c.yMin
+	yMax := c.yMax
+
+	if len(bounds) > 0 {
+		yMin = bounds[0]
+		yMax = bounds[1]
+	}
+
+	for y := yMin; y <= yMax; y++ {
+		point := c.getPoint(x, y)
+
+		for _, sensor := range c.sensors {
+			if point.withinRange(sensor) {
+				if point.isInvalid() {
+					coverage++
+				}
+				break
+			}
+		}
+	}
+
+	return coverage
+}
+
+// findDistressSignal finds the distress signal within the given bounds.
+func (c *Cave) findDistressSignal(min, max int) *Point {
+	var point *Point
+	coveragesX := make(map[int]int)
+	coveragesY := make(map[int]int)
+
+	for x := min; x <= max; x++ {
+		coverageX := c.getSensorCoverageAtX(x, min, max)
+		if coverageX < max - min {
+			coveragesX[x] = coverageX
+		}
+	}
+
+	for y := min; y <= max; y++ {
+		coverageY := c.getSensorCoverageAtY(y, min, max)
+		if coverageY < max - min {
+			coveragesY[y] = coverageY
+		}
+	}
+
+	xKeys := helpers.GetIntMapKeys(coveragesX)
+	yKeys := helpers.GetIntMapKeys(coveragesY)
+	sort.Ints(xKeys)
+	sort.Ints(yKeys)
+
+	for _, x := range xKeys {
+		for _, y := range yKeys {
+			point := c.getPoint(x, y)
+			pointLeft := c.getPoint(x - 1, y)
+			pointRight := c.getPoint(x + 1, y)
+
+			if !point.isAir() || pointLeft.isAir() || pointRight.isAir() {
+				continue
+			}
+
+			return point
+		}
+	}
+
+	return point
 }
 
 // cover covers the cave with a sensor.
@@ -228,7 +322,7 @@ func (c *Cave) String() string {
 	str := ""
 	for y := c.yMin; y <= c.yMax; y++ {
 		if VERBOSE {
-			str += fmt.Sprintf("%d\t", c.yMin + y)
+			str += fmt.Sprintf("%d\t", (c.yMin + c.offset) + y)
 		}
 		for x := c.xMin; x <= c.xMax; x++ {
 			point := c.getPoint(x, y)
@@ -244,15 +338,16 @@ func (c *Cave) String() string {
 }
 
 // newCave returns a new cave.
-func newCave(xMin, xMax, yMin, yMax int) *Cave {
+func newCave(xMin, xMax, yMin, yMax, offset int) *Cave {
 	c := Cave{
-		xMin: xMin,
-		xMax: xMax,
-		yMin: yMin,
-		yMax: yMax,
+		xMin: xMin-offset,
+		xMax: xMax+offset,
+		yMin: yMin-offset,
+		yMax: yMax+offset,
 	}
 
 	c.grid = make(map[int]map[int]*Point)
+	c.offset = offset
 
 	return &c
 }
@@ -332,18 +427,20 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// print the text lines
+	// part 1
 	coverageAt := COVERAGE_AT
 	if len(args) > 1 {
 		coverageAt, _ = strconv.Atoi(args[1])
 	}
+	caveOffset := coverageAt * 2
 	points := getPointsFromFile(txtlines)
 	xMin, xMax, yMin, yMax := getMinMaxCoords(points)
 	cave := newCave(
-		xMin-CAVE_OFFSET,
-		xMax+CAVE_OFFSET,
-		yMin-CAVE_OFFSET,
-		yMax+CAVE_OFFSET,
+		xMin,
+		xMax,
+		yMin,
+		yMax,
+		caveOffset,
 	)
 	for _, point := range points {
 		cave.addPoint(point)
@@ -354,10 +451,15 @@ func main() {
 		numBeaconCannotBePresent := cave.getCoverageAt(coverageAt)
 		fmt.Println(numBeaconCannotBePresent)
 	} else {
-		numBeaconNotPresent := cave.getSensorCoverageAt(coverageAt)
+		numBeaconNotPresent := cave.getSensorCoverageAtY(coverageAt)
 		fmt.Printf(
 			"[Part One] The answer is: %d\n",
 			numBeaconNotPresent,
 		)
 	}
+
+	// part 2
+	distressSignal := cave.findDistressSignal(MIN_COORDINATE, MAX_COORDINATE)
+	fmt.Println(distressSignal.x, distressSignal.y)
+	fmt.Println(distressSignal.calculateTuningFrequency())
 }
