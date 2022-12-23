@@ -20,8 +20,6 @@ type Valve struct {
 	open     bool
 	// when the valve was opened
 	openedAt int
-	// if the valve was visited
-	visited  bool
 }
 
 func (v *Valve) calculatePressureReleased() int {
@@ -38,7 +36,6 @@ func newValve(label string, flowRate int) *Valve {
 		flowRate: flowRate,
 		open:     false,
 		openedAt: 0,
-		visited:  false,
 	}
 }
 
@@ -72,13 +69,11 @@ func (c *Cave) moveInTime() {
 	c.elapsed++
 }
 
-// TODO: this is not working
-// We need to move to the next position, not the next valve
 func (c *Cave) move(v *Valve) {
 	for _, next := range c.position.leadsTo {
 		if next == v {
 			c.position = c.getPosition(next)
-			c.position.value.visited = true
+			c.openValve()
 			break
 		} else if VERBOSE {
 			fmt.Println("-- Skipped", next.label)
@@ -94,7 +89,7 @@ func (c *Cave) move(v *Valve) {
 
 func (c *Cave) moveNext() bool {
 	for _, next := range c.position.leadsTo {
-		if !next.visited {
+		if !next.open {
 			c.move(next)
 			return true
 		} else if VERBOSE {
@@ -105,9 +100,11 @@ func (c *Cave) moveNext() bool {
 }
 
 func (c *Cave) openValve() {
-	c.position.value.open = true
-	c.position.value.openedAt = c.elapsed
-	c.moveInTime()
+	if !c.position.value.open {
+		c.position.value.open = true
+		c.position.value.openedAt = c.elapsed
+		c.moveInTime()
+	}
 }
 
 func (c *Cave) findPath() {
