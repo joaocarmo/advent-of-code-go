@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
@@ -20,6 +21,8 @@ type Valve struct {
 	open     bool
 	// when the valve was opened
 	openedAt int
+	// if the valve was visited
+	visited  bool
 }
 
 func (v *Valve) calculatePressureReleased() int {
@@ -36,12 +39,23 @@ func newValve(label string, flowRate int) *Valve {
 		flowRate: flowRate,
 		open:     false,
 		openedAt: 0,
+		visited:  false,
 	}
 }
 
 type Position struct {
 	value   *Valve
 	leadsTo []*Valve
+}
+
+func (p *Position) getBestNext() *Valve {
+	best := p.leadsTo[0]
+	for _, next := range p.leadsTo {
+		if !next.visited {
+			best = next
+		}
+	}
+	return best
 }
 
 func (p *Position) String() string {
@@ -55,6 +69,26 @@ type Cave struct {
 	elapsed   int
 }
 
+func (c *Cave) totalFlowRate() int {
+	total := 0
+	for _, position := range c.positions {
+		if position.value.open {
+			total += position.value.flowRate
+		}
+	}
+	return total
+}
+
+func (c *Cave) getOpenValves() []string {
+	openValves := make([]string, 0)
+	for _, position := range c.positions {
+		if position.value.open {
+			openValves = append(openValves, position.value.label)
+		}
+	}
+	return openValves
+}
+
 func (c *Cave) getPosition(v *Valve) *Position {
 	for _, position := range c.positions {
 		if position.value == v {
@@ -65,57 +99,51 @@ func (c *Cave) getPosition(v *Valve) *Position {
 	return nil
 }
 
+func (c *Cave) openValve() {
+	if !c.position.value.open && c.position.value.flowRate > 0 {
+		c.moveInTime()
+		c.position.value.open = true
+		c.position.value.openedAt = c.elapsed
+
+		if VERBOSE {
+			fmt.Println("You open valve", c.position.value.label)
+		}
+	}
+	c.position.value.visited = true
+}
+
 func (c *Cave) moveInTime() {
+	if VERBOSE {
+		currentPressure := c.totalFlowRate()
+		openValves := strings.Join(c.getOpenValves(), ", ")
+		fmt.Println("== Minute", c.elapsed, "==")
+		if len(openValves) == 0 {
+			fmt.Println("No valves are open.")
+		} else {
+			fmt.Println("Valves", openValves, "are open, releasing", currentPressure, "pressure.")
+		}
+	}
 	c.elapsed++
 }
 
 func (c *Cave) move(v *Valve) {
-	for _, next := range c.position.leadsTo {
-		if next == v {
-			c.position = c.getPosition(next)
-			c.openValve()
-			break
-		} else if VERBOSE {
-			fmt.Println("-- Skipped", next.label)
-		}
-	}
-
-	if VERBOSE {
-		fmt.Println("Moved to", c.position.value.label, "at", c.elapsed, "min")
-	}
-
 	c.moveInTime()
+
+	c.position = c.getPosition(v)
+	if VERBOSE {
+		fmt.Println("You move to valve", c.position.value.label)
+	}
 }
 
-func (c *Cave) moveNext() bool {
-	for _, next := range c.position.leadsTo {
-		if !next.open {
-			c.move(next)
-			return true
-		} else if VERBOSE {
-			fmt.Println("- Skipped", next.label)
-		}
-	}
-	return false
-}
-
-func (c *Cave) openValve() {
-	if !c.position.value.open {
-		c.position.value.open = true
-		c.position.value.openedAt = c.elapsed
-		c.moveInTime()
-	}
+func (c *Cave) moveNext() {
+	bestNextPosition := c.position.getBestNext()
+	c.move(bestNextPosition)
 }
 
 func (c *Cave) findPath() {
 	for c.elapsed < MINUTES_REMAINING {
-		if !c.position.value.open && c.position.value.flowRate > 0 {
-			c.openValve()
-		}
-
-		if !c.moveNext() {
-			return
-		}
+		c.openValve()
+		c.moveNext()
 	}
 }
 
