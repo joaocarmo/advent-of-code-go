@@ -52,9 +52,20 @@ func (p *Position) String() string {
 }
 
 type Cave struct {
-	position *Position
-	start    *Position
-	elapsed  int
+	positions []*Position
+	position  *Position
+	start     *Position
+	elapsed   int
+}
+
+func (c *Cave) getPosition(v *Valve) *Position {
+	for _, position := range c.positions {
+		if position.value == v {
+			return position
+		}
+	}
+
+	return nil
 }
 
 func (c *Cave) moveInTime() {
@@ -66,7 +77,7 @@ func (c *Cave) moveInTime() {
 func (c *Cave) move(v *Valve) {
 	for _, next := range c.position.leadsTo {
 		if next == v {
-			c.position.value = v
+			c.position = c.getPosition(next)
 			c.position.value.visited = true
 			break
 		} else if VERBOSE {
@@ -115,11 +126,14 @@ func (c *Cave) String() string {
 	return fmt.Sprintf("%s (%d min)", c.position.value.label, c.elapsed)
 }
 
-func newCave(start *Position) *Cave {
+func newCave(positions []*Position) *Cave {
+	start := positions[0]
+
 	return &Cave{
-		position: start,
-		start:    start,
-		elapsed:  0,
+		positions: positions,
+		position:  start,
+		start:     start,
+		elapsed:   0,
 	}
 }
 
@@ -185,7 +199,7 @@ func main() {
 	for _, position := range positions {
 		fmt.Println(position)
 	}
-	cave := newCave(positions[0])
+	cave := newCave(positions)
 	fmt.Println(cave)
 	cave.findPath()
 	pressureReleased := getPressureReleased(positions)
