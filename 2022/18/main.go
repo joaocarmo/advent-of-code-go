@@ -8,29 +8,36 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
+const VERBOSE = false
 const COORDINATES_DELIMITER = ","
 const FACES_PER_CUBE = 6
 
+// Point represents a point in 3D space.
 type Point struct {
 	x, y, z int
 }
 
+// String returns a string representation of the point.
 func (p *Point) String() string {
 	return fmt.Sprintf("(%d, %d, %d)", p.x, p.y, p.z)
 }
 
+// Cube represents a cube.
 type Cube struct {
 	position *Point
 }
 
+// String returns a string representation of the cube.
 func (c *Cube) String() string {
 	return c.position.String()
 }
 
+// Grid represents a grid of cubes.
 type Grid struct {
 	cubes []*Cube
 }
 
+// getAdjacentFaces returns the number of adjacent faces.
 func (g *Grid) getAdjacentFaces() int {
 	adjacentFaces := 0
 	for _, cube := range g.cubes {
@@ -42,15 +49,21 @@ func (g *Grid) getAdjacentFaces() int {
 			}
 
 			if cube.position.x == otherCube.position.x && cube.position.y == otherCube.position.y {
-				cubesFaces++
+				if cube.position.z == otherCube.position.z+1 || cube.position.z == otherCube.position.z-1 {
+					cubesFaces++
+				}
 			}
 
 			if cube.position.x == otherCube.position.x && cube.position.z == otherCube.position.z {
-				cubesFaces++
+				if cube.position.y == otherCube.position.y+1 || cube.position.y == otherCube.position.y-1 {
+					cubesFaces++
+				}
 			}
 
 			if cube.position.y == otherCube.position.y && cube.position.z == otherCube.position.z {
-				cubesFaces++
+				if cube.position.x == otherCube.position.x+1 || cube.position.x == otherCube.position.x-1 {
+					cubesFaces++
+				}
 			}
 
 			adjacentFaces += cubesFaces
@@ -60,12 +73,14 @@ func (g *Grid) getAdjacentFaces() int {
 	return adjacentFaces
 }
 
+// getSurfaceArea returns the surface area of the grid.
 func (g *Grid) getSurfaceArea() int {
 	totalFaces := len(g.cubes) * FACES_PER_CUBE
 	adjacentFaces := g.getAdjacentFaces()
 	return totalFaces - adjacentFaces
 }
 
+// String returns a string representation of the grid.
 func (g *Grid) String() string {
 	str := ""
 	for _, cube := range g.cubes {
@@ -74,6 +89,7 @@ func (g *Grid) String() string {
 	return str
 }
 
+// getCoordinatesFromLine returns the coordinates from a line.
 func getCoordinatesFromLine(line string) (int, int, int) {
 	coordinates := strings.Split(line, COORDINATES_DELIMITER)
 	x, _ := strconv.Atoi(coordinates[0])
@@ -82,6 +98,7 @@ func getCoordinatesFromLine(line string) (int, int, int) {
 	return x, y, z
 }
 
+// getGridFromFile returns a grid from a file.
 func getGridFromFile(txtlines []string) *Grid {
 	grid := &Grid{
 		cubes: make([]*Cube, len(txtlines)),
@@ -108,7 +125,11 @@ func main() {
 
 	// process the file
 	grid := getGridFromFile(txtlines)
+
+	// part 1
 	surfaceArea := grid.getSurfaceArea()
-	fmt.Println(grid)
-	fmt.Println(surfaceArea)
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		surfaceArea,
+	)
 }
