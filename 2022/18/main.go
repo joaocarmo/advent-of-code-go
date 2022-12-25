@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -34,7 +35,11 @@ func (c *Cube) String() string {
 
 // Grid represents a grid of cubes.
 type Grid struct {
-	cubes []*Cube
+	cubes      []*Cube
+	cubesMap   map[int]map[int]map[int]bool
+	minX, maxX int
+	minY, maxY int
+	minZ, maxZ int
 }
 
 // getAdjacentFaces returns the number of adjacent faces.
@@ -73,6 +78,158 @@ func (g *Grid) getAdjacentFaces() int {
 	return adjacentFaces
 }
 
+// getMinMax returns the min and max values for the grid.
+func (g *Grid) getMinMax() {
+	minX, maxX := math.MaxInt32, math.MinInt32
+	minY, maxY := math.MaxInt32, math.MinInt32
+	minZ, maxZ := math.MaxInt32, math.MinInt32
+
+	for _, cube := range g.cubes {
+		if cube.position.x < minX {
+			minX = cube.position.x
+		}
+		if cube.position.x > maxX {
+			maxX = cube.position.x
+		}
+		if cube.position.y < minY {
+			minY = cube.position.y
+		}
+		if cube.position.y > maxY {
+			maxY = cube.position.y
+		}
+		if cube.position.z < minZ {
+			minZ = cube.position.z
+		}
+		if cube.position.z > maxZ {
+			maxZ = cube.position.z
+		}
+	}
+
+	g.minX = minX
+	g.maxX = maxX
+	g.minY = minY
+	g.maxY = maxY
+	g.minZ = minZ
+	g.maxZ = maxZ
+}
+
+func (g *Grid) withinBounds(p *Point) bool {
+	return p.x >= g.minX && p.x <= g.maxX && p.y >= g.minY && p.y <= g.maxY && p.z >= g.minZ && p.z <= g.maxZ
+}
+
+func (g *Grid) exists(p *Point) bool {
+	for _, cube := range g.cubes {
+		if cube.position.x == p.x && cube.position.y == p.y && cube.position.z == p.z {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (g *Grid) addToInternalGrid(p *Point, v bool) {
+	if _, ok := g.cubesMap[p.x]; !ok {
+		g.cubesMap[p.x] = make(map[int]map[int]bool)
+	}
+	if _, ok := g.cubesMap[p.x][p.y]; !ok {
+		g.cubesMap[p.x][p.y] = make(map[int]bool)
+	}
+	g.cubesMap[p.x][p.y][p.z] = v
+}
+
+func (g *Grid) inInternalGrid(p *Point) bool {
+	if _, ok := g.cubesMap[p.x]; !ok {
+		return false
+	}
+	if _, ok := g.cubesMap[p.x][p.y]; !ok {
+		return false
+	}
+	if _, ok := g.cubesMap[p.x][p.y][p.z]; !ok {
+		return false
+	}
+
+	return true
+}
+
+// getInternalFaces returns the number of internal faces.
+func (g *Grid) getInternalCubes() []*Point {
+	queue := []*Point{}
+	start := &Point{g.minX, g.minY, g.minZ}
+	queue = append(queue, start)
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		g.addToInternalGrid(current, true)
+
+		x, y, z := current.x, current.y, current.z
+		directions := []*Point{
+			&Point{x, y, z + 1},
+			&Point{x, y, z - 1},
+			&Point{x, y + 1, z},
+			&Point{x, y - 1, z},
+			&Point{x + 1, y, z},
+			&Point{x - 1, y, z},
+		}
+
+		for _, direction := range directions {
+			if alreadyInQueue(queue, direction) {
+				continue
+			}
+
+			if g.inInternalGrid(direction) {
+				continue
+			}
+
+			if !g.withinBounds(direction) {
+				continue
+			}
+
+			if g.exists(direction) {
+				continue
+			}
+
+			queue = append(queue, direction)
+		}
+	}
+
+	internalCubes := []*Point{}
+	for x := g.minX; x <= g.maxX; x++ {
+		for y := g.minY; y <= g.maxY; y++ {
+			for z := g.minZ; z <= g.maxZ; z++ {
+				current := &Point{x, y, z}
+
+				if g.inInternalGrid(current) {
+					continue
+				}
+
+				if g.exists(current) {
+					continue
+				}
+
+				internalCubes = append(internalCubes, current)
+			}
+		}
+	}
+
+	return internalCubes
+}
+
+// getExternalSurfaceArea returns the external surface area of the grid.
+func (g *Grid) getInternalSurfaceArea() int {
+	internalCubes := g.getInternalCubes()
+	newGrid := newGrid(len(internalCubes))
+
+	for i, cube := range internalCubes {
+		newGrid.cubes[i] = &Cube{position: cube}
+	}
+
+	surfaceArea := newGrid.getSurfaceArea()
+
+	return surfaceArea
+}
+
 // getSurfaceArea returns the surface area of the grid.
 func (g *Grid) getSurfaceArea() int {
 	totalFaces := len(g.cubes) * FACES_PER_CUBE
@@ -89,6 +246,24 @@ func (g *Grid) String() string {
 	return str
 }
 
+// newGrid returns a new grid.
+func newGrid(n int) *Grid {
+	g := &Grid{
+		cubes: make([]*Cube, n),
+		cubesMap: make(map[int]map[int]map[int]bool),
+	}
+	return g
+}
+
+func alreadyInQueue(queue []*Point, direction *Point) bool {
+	for _, p := range queue {
+		if p.x == direction.x && p.y == direction.y && p.z == direction.z {
+			return true
+		}
+	}
+	return false
+}
+
 // getCoordinatesFromLine returns the coordinates from a line.
 func getCoordinatesFromLine(line string) (int, int, int) {
 	coordinates := strings.Split(line, COORDINATES_DELIMITER)
@@ -100,9 +275,7 @@ func getCoordinatesFromLine(line string) (int, int, int) {
 
 // getGridFromFile returns a grid from a file.
 func getGridFromFile(txtlines []string) *Grid {
-	grid := &Grid{
-		cubes: make([]*Cube, len(txtlines)),
-	}
+	grid := newGrid(len(txtlines))
 	for i, line := range txtlines {
 		x, y, z := getCoordinatesFromLine(line)
 		grid.cubes[i] = &Cube{
@@ -132,4 +305,9 @@ func main() {
 		"[Part One] The answer is: %d\n",
 		surfaceArea,
 	)
+
+	// part 2
+	grid.getMinMax()
+	internalSurfaceArea := grid.getInternalSurfaceArea()
+	fmt.Println(surfaceArea, "-", internalSurfaceArea, "=", surfaceArea - internalSurfaceArea)
 }
