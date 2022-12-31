@@ -8,8 +8,9 @@ import (
 	"github.com/joaocarmo/advent-of-code/helpers"
 )
 
-const VERBOSE = false
+const VERBOSE = true
 const ROOT = "root"
+const HUMAN = "humn"
 
 // Operator represents an operator.
 type Operator int
@@ -19,20 +20,13 @@ const (
 	Minus
 	Multiply
 	Divide
+	Matches
 )
 
 // String returns the string representation of an operator.
 func (o Operator) String() string {
-	return [...]string{"+", "-", "*", "/"}[o]
+	return [...]string{"+", "-", "*", "/", "="}[o]
 }
-
-// Job represents a job.
-type Job int
-
-const (
-	YellNumber Job = iota
-	YellOperation
-)
 
 // newOperator creates a new operator.
 func newOperator(operator string) Operator {
@@ -45,10 +39,20 @@ func newOperator(operator string) Operator {
 		return Multiply
 	case "/":
 		return Divide
+	case "=":
+		return Matches
 	}
 
 	return -1
 }
+
+// Job represents a job.
+type Job int
+
+const (
+	YellNumber Job = iota
+	YellOperation
+)
 
 // String returns the string representation of a job.
 func (j Job) String() string {
@@ -75,9 +79,20 @@ func (o Operation) getResult() int {
 		result = o.leftSide.result * o.rightSide.result
 	case Divide:
 		result = o.leftSide.result / o.rightSide.result
+	case Matches:
+		result = 0
 	}
 
 	return result
+}
+
+// matches returns if an operation matches.
+func (o Operation) matches() bool {
+	if o.operator == Matches {
+		return o.leftSide.result == o.rightSide.result
+	}
+
+	return false
 }
 
 // String returns the string representation of an operation.
@@ -168,7 +183,7 @@ func (ml MonkeyList) parseOperation(operation string) *Operation {
 }
 
 // getMonkeyFromLine returns a monkey from a line.
-func (ml MonkeyList) getMonkeyFromLine(line string) {
+func (ml MonkeyList) getMonkeyFromLine(line string, fixLogic bool) {
 	job := YellNumber
 	var operation *Operation
 	monkeyAndJob := strings.Split(line, ":")
@@ -179,6 +194,14 @@ func (ml MonkeyList) getMonkeyFromLine(line string) {
 	if err != nil {
 		job = YellOperation
 		operation = ml.parseOperation(jobString)
+	}
+
+	if fixLogic {
+		if name == ROOT {
+			operation.operator = Matches
+		} else if name == HUMAN {
+			number = 0
+		}
 	}
 
 	ml.setMonkey(newMonkey(name, job, number, operation))
@@ -202,6 +225,15 @@ func (ml MonkeyList) getResultForMonkey(name string) {
 	monkey.result = monkey.operation.getResult()
 }
 
+func (ml MonkeyList) solve() {
+	ml.getResultForMonkey(ROOT)
+	root := ml.getMonkey(ROOT)
+
+	if root.operation.matches() {
+		return
+	}
+}
+
 // String returns the string representation of a list of monkeys.
 func (ml MonkeyList) String() string {
 	result := ""
@@ -214,11 +246,11 @@ func (ml MonkeyList) String() string {
 }
 
 // getMonkeysFromFile returns a list of monkeys from a file.
-func getMonkeysFromFile(txtlines []string) *MonkeyList {
+func getMonkeysFromFile(txtlines []string, fixLogic bool) *MonkeyList {
 	monkeys := make(MonkeyList, len(txtlines))
 
 	for _, line := range txtlines {
-		monkeys.getMonkeyFromLine(line)
+		monkeys.getMonkeyFromLine(line, fixLogic)
 	}
 
 	return &monkeys
@@ -231,17 +263,21 @@ func main() {
 	filename := args[0]
 	txtlines := helpers.ReadFile(filename)
 
-	// process the file
-	monkeys := getMonkeysFromFile(txtlines)
-	if VERBOSE {
-		fmt.Println(monkeys)
-	}
-
 	// part 1
-	monkeys.getResultForMonkey(ROOT)
-	root := monkeys.getMonkey(ROOT)
+	monkeys1 := getMonkeysFromFile(txtlines, false)
+	monkeys1.getResultForMonkey(ROOT)
+	root1 := monkeys1.getMonkey(ROOT)
 	fmt.Printf(
 		"[Part One] The answer is: %d\n",
-		root.result,
+		root1.result,
 	)
+
+	// part 2
+	monkeys2 := getMonkeysFromFile(txtlines, true)
+	monkeys2.solve()
+	if !VERBOSE {
+		fmt.Println(monkeys2)
+	}
+	human2 := monkeys2.getMonkey(HUMAN)
+	fmt.Println("human yell:", human2.result)
 }
