@@ -117,3 +117,14 @@ func MultiplyInts(ints ...int) int {
 
 	return product
 }
+
+// EuclideanRemainder returns the remainder of the Euclidean division.
+func EuclideanRemainder(a, b int) int {
+	result := a % b
+
+	if (result < 0) {
+		return result + b
+	}
+
+	return result
+}

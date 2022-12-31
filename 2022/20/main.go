@@ -8,36 +8,13 @@ import (
 )
 
 const VERBOSE = false
+const VERY_VERBOSE = false
 const GROVE_COORDINATE_1 = 1000
 const GROVE_COORDINATE_2 = 2000
 const GROVE_COORDINATE_3 = 3000
 
-type Direction int
-
-const (
-	None Direction = iota
-	Left
-	Right
-)
-
-func (d Direction) String() string {
-	return [...]string{"None", "Left", "Right"}[d]
-}
-
 type Number struct {
 	value int
-}
-
-func (n Number) getDirection() Direction {
-	if n.value == 0 {
-		return None
-	}
-
-	if n.value < 0 {
-		return Left
-	}
-
-	return Right
 }
 
 func (n Number) String() string {
@@ -54,27 +31,37 @@ type Message struct {
 }
 
 func (m Message) getNextIndex(n *Number, currentIndex int) int {
-	K := len(m.encrypted)
-	nextIndex := currentIndex + n.value
+	numElements := len(m.encrypted)
+	lastIndex := numElements - 1
 
-	if nextIndex < 0 {
-		nextIndex = K - (helpers.AbsInt(nextIndex) % K) - 1
-	}
-
-	if nextIndex == 0 {
-		nextIndex = K - 1
-	}
-
-	if nextIndex > K {
-		nextIndex = nextIndex + 1
-	}
-
-	return nextIndex % K
+	return helpers.EuclideanRemainder(currentIndex + n.value, lastIndex)
 }
 
 func (m Message) getGroveCoordinate(n int) *Number {
 	zeroIndex := findIndexByValue(m.decrypted, 0)
-	return m.decrypted[(zeroIndex + n) % len(m.decrypted)]
+	decryptedIndex := (zeroIndex + n) % len(m.decrypted)
+
+	if VERBOSE {
+		fmt.Println("--> zeroIndex:", zeroIndex)
+		fmt.Println("--> decryptedIndex:", decryptedIndex)
+	}
+
+	return m.decrypted[decryptedIndex]
+}
+
+func (m Message) getSumOfCoordinates(indices []int) int {
+	sumCoordinates := 0
+
+	for _, groveCoordinateIndex := range indices {
+		groveCoordinate := m.getGroveCoordinate(groveCoordinateIndex)
+		sumCoordinates += groveCoordinate.value
+
+		if VERBOSE {
+			fmt.Println("Grove coordinate", groveCoordinateIndex, "is", groveCoordinate)
+		}
+	}
+
+	return sumCoordinates
 }
 
 func (m Message) getRealIndex(n int) int {
@@ -87,10 +74,6 @@ func (m Message) getRealValue(n int) *Number {
 
 func (m Message) moveIndex(n int) {
 	number := m.getRealValue(n)
-
-	if number.getDirection() == None {
-		return
-	}
 
 	indexFrom := findIndex(m.decrypted, number)
 	indexTo := m.getNextIndex(number, indexFrom)
@@ -108,7 +91,7 @@ func (m Message) moveAllIndexes() {
 	for i := 0; i < len(m.encrypted); i++ {
 		m.moveIndex(i)
 
-		if VERBOSE {
+		if VERY_VERBOSE {
 			fmt.Println("------------------------------------- Moving index:", i)
 			fmt.Println(m)
 		}
@@ -206,14 +189,9 @@ func main() {
 	// part 1
 	message := newMessage(encrypted)
 	message.moveAllIndexes()
-	if VERBOSE {
-		fmt.Println(message)
-	}
-	sumCoordinates := 0
-	for _, groveCoordinateIndex := range groveCoordinateIndices {
-		groveCoordinate := message.getGroveCoordinate(groveCoordinateIndex)
-		sumCoordinates += groveCoordinate.value
-		fmt.Println("Grove coordinate", groveCoordinateIndex, "is", groveCoordinate)
-	}
-	fmt.Println("Sum of grove coordinates is", sumCoordinates)
+	sumCoordinates := message.getSumOfCoordinates(groveCoordinateIndices)
+	fmt.Printf(
+		"[Part One] The answer is: %d\n",
+		sumCoordinates,
+	)
 }
